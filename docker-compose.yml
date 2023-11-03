@@ -1,0 +1,14 @@
+version: '3'
+services:
+  server:
+    image: oven/bun:latest
+    volumes:
+      - "./server:/app"
+    working_dir: /app
+    command: bun run start
+  client:
+    image: oven/bun:latest
+    volumes:
+      - "./server:/app"
+    working_dir: /app
+    command: bun run start
