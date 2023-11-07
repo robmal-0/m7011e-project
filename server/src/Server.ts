@@ -14,7 +14,7 @@ export default class Server {
 		if (dbUrl !== undefined) {
 			this.db = new Sequelize(dbUrl, { logging: false })
 			this.db.authenticate()
-				.then(() => { console.log('Database connection astablished') })
+				.then(() => { console.log('Database connection established') })
 				.catch(() => { console.error('Database connection failed') })
 		}
 		this.listener = new Listener('', (req) => {
@@ -24,7 +24,7 @@ export default class Server {
 			fetch: (req): Promise<Response> | Response => {
 				return this.listener.match(new URL(req.url).pathname, req) ??
 					this.listener.match('', req) ??
-					new Response('An error occured', { status: 404 })
+					new Response('An error occurred', { status: 404 })
 			},
 			port
 		})
