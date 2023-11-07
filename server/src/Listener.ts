@@ -3,13 +3,13 @@ export default class Listener {
 	readonly exec
 	listeners: Listener[]
 
-	constructor (matcher: string, exec: (req: Request) => Response | undefined) {
+	constructor (matcher: string, exec: (req: Request) => Promise<Response> | Response | undefined) {
 		this.matcher = matcher
 		this.listeners = []
 		this.exec = exec
 	}
 
-	addListener (matcher: string, exec: (req: Request) => Response | undefined): Listener {
+	addListener (matcher: string, exec: (req: Request) => Promise<Response> | Response | undefined): Listener {
 		const listener = new Listener(matcher, exec)
 		this.listeners.push(listener)
 		return listener
@@ -19,7 +19,7 @@ export default class Listener {
 		return this.addListener(path, () => undefined)
 	}
 
-	match (str: string, req: Request): Response | undefined {
+	match (str: string, req: Request): Promise<Response> | Response | undefined {
 		const list = str.split('/')
 		if (list.length > 1 && list[list.length - 1] === '') list.pop()
 		if (list.length === 1 && list[0] === this.matcher) {

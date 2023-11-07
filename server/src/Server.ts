@@ -12,8 +12,8 @@ export default class Server {
 	constructor (port: number, dbUrl?: string) {
 		this.port = port
 		if (dbUrl !== undefined) {
-			this.db = new Sequelize(dbUrl)
-			this.db.authenticate({ logging: false })
+			this.db = new Sequelize(dbUrl, { logging: false })
+			this.db.authenticate()
 				.then(() => { console.log('Database connection astablished') })
 				.catch(() => { console.error('Database connection failed') })
 		}
@@ -21,7 +21,7 @@ export default class Server {
 			return new Response(`Could not resolve path ${new URL(req.url).pathname}`, { status: 404 })
 		})
 		this.server = Bun.serve({
-			fetch: (req): Response => {
+			fetch: (req): Promise<Response> | Response => {
 				return this.listener.match(new URL(req.url).pathname, req) ??
 					this.listener.match('', req) ??
 					new Response('An error occured', { status: 404 })

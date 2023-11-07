@@ -22,6 +22,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "js-sha256": "^0.10.1",
     "mysql2": "^3.6.3",
     "sequelize": "^6.34.0"
   }
