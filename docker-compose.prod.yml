@@ -1,0 +1,26 @@
+version: '3'
+services:
+  server:
+    image: oven/bun:latest
+    volumes:
+      - "./server:/app"
+    depends_on:
+      - db
+    working_dir: /app
+    ports:
+      - '3000:3000'
+    command: bun run start
+  client:
+    image: oven/bun:latest
+    volumes:
+      - "./client:/app"
+    depends_on:
+      - server
+    working_dir: /app
+    command: bun run start
+  db:
+    image: nouchka/sqlite3:latest
+    stdin_open: true
+    tty: true
+    volumes:
+     - ./db/:/root/db/

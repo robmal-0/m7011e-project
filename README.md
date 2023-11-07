@@ -4,3 +4,5 @@
 
 Use `docker compose up -d` to run the docker containers in the background. 
 This runs both the server and the client side.
+
+Stop containers with `docker compose down`
