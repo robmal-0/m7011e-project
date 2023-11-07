@@ -8,6 +8,9 @@
     "lint": "bunx eslint src/*.ts"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie": "^0.5.4",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/mysql": "^2.15.23",
     "@typescript-eslint/eslint-plugin": "^6.9.1",
     "bun-types": "latest",
@@ -22,7 +25,10 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie": "^0.6.0",
     "js-sha256": "^0.10.1",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.3",
     "sequelize": "^6.34.0"
   }

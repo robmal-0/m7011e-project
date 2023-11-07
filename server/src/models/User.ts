@@ -8,10 +8,14 @@ const User = server.db?.define('User', {
 		primaryKey: true
 	},
 	username: {
-		type: DataTypes.STRING
+		type: DataTypes.STRING,
+		unique: true,
+		allowNull: false
 	},
 	email: {
-		type: DataTypes.STRING
+		type: DataTypes.STRING,
+		unique: true,
+		allowNull: false
 	},
 	password: {
 		type: DataTypes.STRING
