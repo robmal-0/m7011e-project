@@ -31,6 +31,16 @@ const User = server.db?.define('User', {
 	}
 })
 
+export interface UserType {
+	id: number
+	username: string
+	email: string
+	password: string
+	age: number
+	firstName: string
+	lastName: string
+}
+
 User?.sync()
 	.then(() => { console.log('Created User table') })
 	.catch(() => { console.error('Failed to create User table') })

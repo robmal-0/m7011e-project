@@ -25,10 +25,6 @@ services:
       MYSQL_USER: 'admin'
       MYSQL_PASSWORD: 'pwd123'
       MYSQL_ROOT_PASSWORD: 'pwd123'
-    ports:
-      - '3306:3306'
-    expose:
-      - '3306'
     volumes:
       - ./db:/var/lib/mysql
   phpmyadmin:

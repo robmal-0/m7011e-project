@@ -5,8 +5,6 @@ const University = server.db?.define('University', {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
-		unique: true,
-		allowNull: false,
 		autoIncrement: true
 	},
 	name: {
