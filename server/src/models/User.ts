@@ -18,16 +18,29 @@ const User = server.db.define('User', {
 		allowNull: false
 	},
 	password: {
-		type: DataTypes.STRING
+		type: DataTypes.STRING,
+		allowNull: false
 	},
 	age: {
-		type: DataTypes.INTEGER
+		type: DataTypes.INTEGER,
+		allowNull: false
 	},
 	firstName: {
-		type: DataTypes.STRING
+		type: DataTypes.STRING,
+		allowNull: false
 	},
 	lastName: {
-		type: DataTypes.STRING
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	userType: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		defaultValue: 1,
+		validate: { // 1 = user, 2 = moderator, 3 = admin
+			max: 3,
+			min: 1
+		}
 	}
 })
 
