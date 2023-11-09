@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize'
 import server from '../init'
 
-const University = server.db?.define('University', {
+const University = server.db.define('University', {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
@@ -22,7 +22,7 @@ const University = server.db?.define('University', {
 	}
 })
 
-University?.sync()
+University.sync()
 	.then(() => { console.log('Created University table') })
 	.catch(() => { console.error('Failed to create University table') })
 

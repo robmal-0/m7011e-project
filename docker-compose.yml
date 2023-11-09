@@ -1,23 +1,5 @@
 version: '3'
 services:
-  server:
-    image: oven/bun:latest
-    volumes:
-      - "./server:/app"
-    depends_on:
-      - db
-    working_dir: /app
-    ports:
-      - '3000:3000'
-    command: bun run start:dev
-  client:
-    image: oven/bun:latest
-    volumes:
-      - "./client:/app"
-    depends_on:
-      - server
-    working_dir: /app
-    command: bun run start:dev
   db:
     image: mysql:latest
     environment:
@@ -33,3 +15,22 @@ services:
       - db
     ports:
       - 8080:80
+  client:
+    image: oven/bun:latest
+    volumes:
+      - "./client:/app"
+    depends_on:
+      - server
+    working_dir: /app
+    command: bun run start:dev
+  server:
+    image: oven/bun:latest
+    volumes:
+      - "./server:/app"
+    depends_on:
+      - db
+    working_dir: /app
+    ports:
+      - '3000:3000'
+    command: bun run start:dev
+    

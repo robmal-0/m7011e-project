@@ -9,14 +9,14 @@ export default class Server {
 	addListener
 	addGroup
 
-	constructor (port: number, dbUrl?: string) {
+	constructor (port: number, dbUrl: string) {
 		this.port = port
-		if (dbUrl !== undefined) {
-			this.db = new Sequelize(dbUrl, { logging: false })
-			this.db.authenticate()
-				.then(() => { console.log('Database connection established') })
-				.catch(() => { console.error('Database connection failed') })
-		}
+		// if (dbUrl !== undefined) {
+		this.db = new Sequelize(dbUrl, { logging: false })
+		this.db.authenticate()
+			.then(() => { console.log('Database connection established, port: ' + port + ' URL: ' + dbUrl) })
+			.catch((e) => { console.error('Database connection failed: ' + e) })
+		// }
 		this.listener = new Listener('', (req) => {
 			return new Response(`Could not resolve path ${new URL(req.url).pathname}`, { status: 404 })
 		})
