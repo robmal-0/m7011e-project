@@ -57,6 +57,7 @@ userRouter.addListener('auth_token', async (req) => {
 	if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
 
 	const user = await token_verify(req)
+	// console.log('test: ' + typeof user?.id)
 	if (user === undefined) return new Response('Invalid auth token')
 	const headers = new Headers()
 	headers.set('user-data', JSON.stringify(user))
