@@ -1,5 +1,5 @@
 import React, { type ReactElement } from 'react'
-import './App.css'
+// import './App.css'
 import { Route, Routes } from 'react-router'
 import { BrowserRouter } from 'react-router-dom'
 import Layout from './Layout'
