@@ -22,6 +22,8 @@ services:
     depends_on:
       - server
     working_dir: /app
+    ports:
+      - 7500:7500
     command: bun run start:dev
   server:
     image: oven/bun:latest

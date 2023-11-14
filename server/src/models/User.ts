@@ -45,7 +45,8 @@ export interface UserType {
 	lastName: string
 }
 
-User.sync()
+const force = false
+User.sync({ force })
 	.then(() => { console.log('Created User table') })
 	.catch(() => { console.error('Failed to create User table') })
 
