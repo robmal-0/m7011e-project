@@ -9,6 +9,10 @@ export default function Authorized (props: any): ReactElement {
 	useEffect(() => {
 		setAuthorized(user.user !== undefined)
 		setChecked(true)
+		if (user.user === undefined) {
+			history.pushState({}, '', '/login')
+			history.go()
+		}
 	})
 
 	return <>

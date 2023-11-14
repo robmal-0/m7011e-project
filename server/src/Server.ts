@@ -1,13 +1,11 @@
-import Listener from './Listener'
 import { Sequelize } from 'sequelize'
+import express from 'express'
+import cors from 'cors'
 
 export default class Server {
 	server
 	port
-	listener
 	db
-	addListener
-	addGroup
 
 	constructor (port: number, dbUrl: string) {
 		this.port = port
@@ -16,19 +14,13 @@ export default class Server {
 		this.db.authenticate()
 			.then(() => { console.log('Database connection established, port: ' + port + ' URL: ' + dbUrl) })
 			.catch((e) => { console.error('Database connection failed: ' + e) })
-		// }
-		this.listener = new Listener('', (req) => {
-			return new Response(`Could not resolve path ${new URL(req.url).pathname}`, { status: 404 })
-		})
-		this.server = Bun.serve({
-			fetch: (req): Promise<Response> | Response => {
-				return this.listener.match(new URL(req.url).pathname, req) ??
-					this.listener.match('', req) ??
-					new Response('An error occurred', { status: 404 })
-			},
-			port
-		})
-		this.addListener = this.listener.addListener.bind(this.listener)
-		this.addGroup = this.listener.addGroup.bind(this.listener)
+		this.server = express()
+		this.server.use(cors({
+			credentials: true,
+			origin: 'http://localhost:7500'
+		}))
+		this.server.use(express.json())
+
+		this.server.listen(this.port, () => {})
 	}
 }

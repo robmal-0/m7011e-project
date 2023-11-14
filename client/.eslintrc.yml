@@ -4,6 +4,8 @@ env:
 extends:
   - plugin:react/recommended
   - standard-with-typescript
+ignorePatterns:
+  - 'tailwind.config.js'
 overrides: []
 parserOptions:
   ecmaVersion: latest

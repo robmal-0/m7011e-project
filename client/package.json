@@ -18,24 +18,27 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.61",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "concurrently": "^8.2.2",
     "eslint": "^8.53.0",
     "eslint-config-standard-with-typescript": "^39.1.1",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-n": "^16.2.0",
     "eslint-plugin-promise": "^6.1.1",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.61",
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15"
+    "tailwindcss": "^3.3.5"
   },
   "scripts": {
     "start": "bun run start:dev",
-    "start:dev": "PORT=7500 react-scripts start",
+    "start:dev": "PORT=7500 concurrently 'react-scripts start' 'bun run tailwind'",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "bunx eslint src/**/*.ts src/**/*.tsx"
+    "lint": "bunx eslint src/**/*.ts src/**/*.tsx",
+    "tailwind": "tailwindcss -i src/tailwind.css -o src/index.css -w"
   },
   "eslintConfig": {
     "extends": [
