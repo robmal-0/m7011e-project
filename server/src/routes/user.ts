@@ -3,7 +3,7 @@ import User, { type UserType } from '../models/User'
 import bcrypt from 'bcryptjs'
 import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-// import token_verify from '../utils/token_verify'
+import { verifyToken } from '../utils/token_verify'
 
 const userRouter = express.Router()
 
@@ -78,12 +78,22 @@ userRouter.post('/login', (req, res) => {
 })
 
 userRouter.post('/auth_token', (req, res) => {
-	if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
-
 	console.log(req.cookies)
-	res.send('unimplemented')
-	res.status(500)
-	// const user = token_verify(req)
+	verifyToken(req.cookies.auth_token)
+		.then((user) => {
+			if (user !== undefined) {
+				res.status(200)
+				res.send('Successfully verified token')
+				return
+			}
+
+			res.status(500)
+			res.send('Failed to verify token')
+		})
+		.catch(() => {
+			res.status(500)
+			res.send('Failed to verify token')
+		})
 	// // console.log('test: ' + typeof user?.id)
 	// if (user === undefined) return new Response('Invalid auth token')
 	// const headers = new Headers()
@@ -95,13 +105,22 @@ userRouter.delete('/', (req, res) => {
 	// if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
 	// const cookies = req.headers.get('cookie') ?? ''
 	// const parsed = cookie.parse(cookies)
-	// try {
-	// 	const claims: any = jwt.verify(parsed.auth_token, process.env.SECRET_KEY as string)
-	// 	await User?.destroy({ where: { id: claims.id } })
-	// 	return new Response('Success')
-	// } catch {
-	// 	return new Response('Failed to verify token')
-	// }
+	try {
+		const claims = jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims
+		User?.destroy({ where: { id: claims.id } })
+			.then(() => {
+				res.status(200)
+				res.send('Successfully deleted user')
+			})
+			.catch((e) => {
+				console.error(e)
+				res.status(500)
+				res.send('Failed to delete user')
+			})
+	} catch {
+		res.status(500)
+		res.send('Failed to retrieve user from token')
+	}
 })
 
 export default userRouter

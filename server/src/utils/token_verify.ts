@@ -3,11 +3,9 @@ import Admin from '../models/Admin'
 import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 
-export default async function verifyInfo (req: Request): Promise<UserType | undefined> {
-	const cookies = req.headers.get('cookie') ?? ''
-	const parsed = cookie.parse(cookies)
+export async function verifyToken (token: string): Promise<UserType | undefined> {
 	try {
-		const claims = jwt.verify(parsed.auth_token, process.env.SECRET_KEY as string) as unknown as claims
+		const claims = jwt.verify(token, process.env.SECRET_KEY as string) as unknown as claims
 
 		const res: any = await User?.findOne({ where: { id: claims.id } })
 		const user: UserType = {
@@ -28,8 +26,8 @@ export default async function verifyInfo (req: Request): Promise<UserType | unde
 
 // need something to check if user is banned
 
-export async function verifyLogin (req: Request, userId: number): Promise<[boolean, boolean]> { // [if user is defined, if id matches]
-	const userInfo = await verifyInfo(req)
+export async function verifyLogin (token: string, userId: number): Promise<[boolean, boolean]> { // [if user is defined, if id matches]
+	const userInfo = await verifyToken(token)
 
 	if (typeof userInfo !== 'undefined') {
 		if (userInfo.id === userId) {

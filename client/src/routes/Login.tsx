@@ -25,6 +25,7 @@ export default function Login (): ReactElement {
 		const start = Number(new Date())
 		const inter = setInterval(() => { loadingAnim(start) }, 10)
 		e.preventDefault()
+		
 		const res = await fetch({
 			[Tab.LOGIN]: 'http://localhost:3000/user/login',
 			[Tab.REGISTER]: 'http://localhost:3000/user/register'
@@ -43,6 +44,7 @@ export default function Login (): ReactElement {
 				'Content-Type': 'application/json'
 			}
 		})
+
 		if (res.ok) {
 			// const body = await res.text()
 			const userData = res.headers.get('X-User-Data')

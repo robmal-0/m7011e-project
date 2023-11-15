@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize'
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 
 export default class Server {
 	server
@@ -19,6 +20,7 @@ export default class Server {
 			credentials: true,
 			origin: 'http://localhost:7500'
 		}))
+		this.server.use(cookieParser())
 		this.server.use(express.json())
 		this.server.use((req, res, next) => {
 			res.setHeader('Access-Control-Expose-Headers', 'X-User-Data')
