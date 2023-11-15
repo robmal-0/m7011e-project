@@ -29,6 +29,7 @@ userRouter.post('/register', (req, res) => {
 			const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2d' })
 			res.setHeader('Set-Cookie', cookie.serialize('auth_token', token))
 			res.setHeader('X-User-Data', JSON.stringify(user))
+			res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-User-Data')
 			res.status(200)
 			res.send('Successfully registered user')
 		})
@@ -43,7 +44,7 @@ userRouter.post('/login', (req, res) => {
 	User?.findOne({ where: { username: req.body.username } }).then(async (result: any) => {
 		if (result === null) {
 			// new Response('Error user not found', { status: 500 })
-			res.status(404)
+			res.status(401)
 			res.send('Error: user not found')
 			return
 		}
@@ -59,7 +60,7 @@ userRouter.post('/login', (req, res) => {
 
 		const verified: boolean = await bcrypt.compare(req.body.password, user.password)
 		if (verified) {
-			const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2d' })
+			const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2 h' })
 			res.setHeader('Set-Cookie', cookie.serialize('auth_token', token))
 			res.setHeader('X-User-Data', JSON.stringify(user))
 			res.status(200)

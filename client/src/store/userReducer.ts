@@ -7,8 +7,7 @@ const defaultState: UserState = {
 export default (state: UserState = defaultState, action: UserAction): any => {
 	switch (action.type) {
 		case 'SET_USER':
-			state.user = action.payload
-			break
+			return { user: action.payload }
 		default:
 			return state
 	}

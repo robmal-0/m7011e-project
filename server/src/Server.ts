@@ -20,6 +20,10 @@ export default class Server {
 			origin: 'http://localhost:7500'
 		}))
 		this.server.use(express.json())
+		this.server.use((req, res, next) => {
+			res.setHeader('Access-Control-Expose-Headers', 'X-User-Data')
+			next()
+		})
 
 		this.server.listen(this.port, () => {})
 	}

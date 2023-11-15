@@ -1,4 +1,7 @@
 import React, { useState, type FormEvent, type ReactElement, useCallback } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { actions } from '../store'
+import sleep from '../utils/sleep'
 
 export default function Login (): ReactElement {
 	const START_ANGLE = 135
@@ -8,6 +11,8 @@ export default function Login (): ReactElement {
 	const [tab, setTab] = useState(Tab.LOGIN)
 	const [logginIn, setLogginIn] = useState(false)
 	const [angle, setAngle] = useState(START_ANGLE)
+	const userState = useSelector((state: any) => state.currentUser)
+	const userDispatcher = useDispatch()
 
 	const loadingAnim = useCallback((start: number): void => {
 		const time = Number(new Date()) - start
@@ -39,10 +44,16 @@ export default function Login (): ReactElement {
 			}
 		})
 		if (res.ok) {
-			const body = await res.text()
-			console.log(res)
-			console.log(res.headers.get('X-User-Data'))
-			console.log(body)
+			// const body = await res.text()
+			const userData = res.headers.get('X-User-Data')
+			if (userData === null) {
+				console.error('User object was null')
+				return
+			}
+			const user = JSON.parse(userData) as User
+			const action = actions.userActions.setUser(user)
+			userDispatcher(action)
+			await sleep(1000)
 		} else {
 			console.error(await res.text())
 		}

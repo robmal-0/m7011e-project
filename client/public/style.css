@@ -46,6 +46,10 @@
   width: 100vw;
 }
 
+.max-w-full {
+  max-width: 100%;
+}
+
 .cursor-pointer {
   cursor: pointer;
 }
@@ -60,6 +64,10 @@
 
 .justify-end {
   justify-content: flex-end;
+}
+
+.overflow-hidden {
+  overflow: hidden;
 }
 
 .overflow-clip {
