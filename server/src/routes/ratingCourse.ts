@@ -1,34 +1,52 @@
-import server from '../init'
-import CourseParticipation from '../models/RatingCourse'
+import express from 'express'
+import RatingCourse from '../models/RatingCourse'
 import { verifyLogin } from '../utils/token_verify'
 
-const ratingCourseRouter = server.addGroup('ratingCourse')
+const ratingCourseRouter = express.Router()
 
-ratingCourseRouter.addListener('register', async (req) => {
-	if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
-
-	try {
-		// const user = await token_verify(req)
-		const body: any = await req.json()
-		const inputUserId: number = Number(body.userId)
-		const verified: [boolean, boolean] = await verifyLogin(req, inputUserId)
-
-		if (verified[0]) { // can authenticate
-			if (verified[1]) { // user id matches authentication id
-				await CourseParticipation?.create({
-					userId: body.userId,
-					courseId: body.courseId,
-					stars: body.stars
+ratingCourseRouter.post('/register/:courseId', (req, res) => {
+	function createCourseRating (auth: boolean, match: boolean): void { // local function to create a course rating
+		if (auth) { // can authenticate
+			if (match) { // user id matches authentication id
+				RatingCourse?.findOrCreate({
+					where: {
+						userId: inputUserId,
+						courseId: req.params.courseId,
+						stars: req.body.stars
+					}
 				})
-				return new Response('Successfully registered rated the course')
+					.then(([user, created]) => {
+						if (created) {
+							res.status(201)
+							res.send('Successfully rated course')
+						} else {
+							res.status(200)
+							res.send('Course was already rated ' + req.body.stars + ' stars')
+						}
+					})
+					.catch((e) => {
+						console.error(e)
+						res.status(500)
+						res.send('Failed to rate course')
+					})
 			} else {
-				throw new Error('Trying to rate class for other user.')
+				res.status(500)
+				res.send('Trying to rate class for other user.')
 			}
 		} else {
-			throw new Error('User is of type undefined')
+			res.status(500)
+			res.send('User is of type undefined')
 		}
-	} catch (e) {
-		console.error(e)
-		return new Response('Failed to rate the course')
 	}
+
+	const inputUserId: number = Number(req.body.userId)
+	verifyLogin(req.cookies.auth_token, inputUserId)
+		.then(([auth, match]) => {
+			createCourseRating(auth, match)
+		})
+		.catch((e) => {
+			console.log(e)
+		})
 })
+
+export default ratingCourseRouter

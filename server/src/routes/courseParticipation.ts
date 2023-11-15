@@ -1,21 +1,33 @@
-import server from '../init'
+import express from 'express'
 import CourseParticipation from '../models/CourseParticipation'
 
-const courseParticipationRouter = server.addGroup('courseParticipation')
+const courseParticipationRouter = express.Router()
 
-courseParticipationRouter.addListener('register', async (req) => {
-	if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
+courseParticipationRouter.post('/register/:courseId', (req, res) => {
+	// add confirmation that user is logged in
 
-	try {
-		const body: any = await req.json()
-		await CourseParticipation?.create({
-			courseId: body.courseId,
-			userId: body.userId,
-			courseStart: body.courseStart,
-			courseEnd: body.courseEnd
+	CourseParticipation?.findOrCreate({
+		where: {
+			courseId: req.params.courseId,
+			userId: req.body.userId,
+			courseStart: req.body.courseStart,
+			courseEnd: req.body.courseEnd
+		}
+	})
+		.then(([user, created]) => {
+			if (created) {
+				res.status(201)
+				res.send('User was registered for course')
+			} else {
+				res.status(200)
+				res.send('User was already registered for course')
+			}
 		})
-		return new Response('Successfully registered for course')
-	} catch {
-		return new Response('Failed to register for course')
-	}
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to register for course')
+		})
 })
+
+export default courseParticipationRouter

@@ -1,20 +1,32 @@
-import server from '../init'
+import express from 'express'
 import Course from '../models/Course'
 
-const courseRouter = server.addGroup('course')
+const courseRouter = express.Router()
 
-courseRouter.addListener('register', async (req) => {
-	if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
+courseRouter.post('/register/:uniId', (req, res) => {
+	// add confirmation that user is logged in
 
-	try {
-		const body: any = await req.json()
-		await Course?.create({
-			name: body.name,
-			code: body.code,
-			uniId: body.uniId
+	Course?.findOrCreate({
+		where: {
+			name: req.body.name,
+			code: req.body.code,
+			uniId: req.params.uniId
+		}
+	})
+		.then(([user, created]) => {
+			if (created) {
+				res.status(201)
+				res.send('New course was created')
+			} else {
+				res.status(200)
+				res.send('Course already existed')
+			}
 		})
-		return new Response('Successfully created course: ' + body.name)
-	} catch {
-		return new Response('Failed to register course')
-	}
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to create course')
+		})
 })
+
+export default courseRouter

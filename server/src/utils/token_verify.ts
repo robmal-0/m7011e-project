@@ -1,6 +1,5 @@
 import User, { type UserType } from '../models/User'
 import Admin from '../models/Admin'
-import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 
 export async function verifyToken (token: string): Promise<UserType | undefined> {
@@ -40,11 +39,8 @@ export async function verifyLogin (token: string, userId: number): Promise<[bool
 	}
 }
 
-export async function verifyAdmin (req: Request): Promise<boolean> {
-	const cookies = req.headers.get('cookie') ?? ''
-	const parsed = cookie.parse(cookies)
-
-	const claims = jwt.verify(parsed.auth_token, process.env.SECRET_KEY as string) as unknown as claims
+export async function verifyAdmin (token: string): Promise<boolean> {
+	const claims = jwt.verify(token, process.env.SECRET_KEY as string) as unknown as claims
 
 	return await Admin?.count({ where: { userId: claims.id } })
 		.then(count => {

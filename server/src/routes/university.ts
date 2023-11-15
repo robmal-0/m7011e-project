@@ -1,20 +1,36 @@
-import server from '../init'
+import express from 'express'
+/* import bcrypt from 'bcryptjs'
+import cookie from 'cookie'
+import jwt from 'jsonwebtoken'
+import { verifyToken } from '../utils/token_verify' */
 import University from '../models/University'
 
-const universityRouter = server.addGroup('university')
+const universityRouter = express.Router()
 
-universityRouter.addListener('register', async (req) => {
-	if (req.method !== 'POST') return new Response(`Method ${req.method} not allowed`)
+universityRouter.post('/register', (req, res) => {
+	// add check for admin status
 
-	try {
-		const body: any = await req.json()
-		await University?.create({
-			name: body.name,
-			country: body.country,
-			city: body.city
+	University?.findOrCreate({
+		where: {
+			name: req.body.name,
+			country: req.body.country,
+			city: req.body.city
+		}
+	})
+		.then(([user, created]) => {
+			if (created) {
+				res.status(201)
+				res.send('Successfully registered new university')
+			} else {
+				res.status(200)
+				res.send('University already exists')
+			}
 		})
-		return new Response('Successfully created university: ' + body.name)
-	} catch {
-		return new Response('Failed to register university')
-	}
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to register new university')
+		})
 })
+
+export default universityRouter
