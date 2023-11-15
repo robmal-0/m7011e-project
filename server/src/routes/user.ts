@@ -29,7 +29,6 @@ userRouter.post('/register', (req, res) => {
 			const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2d' })
 			res.setHeader('Set-Cookie', cookie.serialize('auth_token', token))
 			res.setHeader('X-User-Data', JSON.stringify(user))
-			res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-User-Data')
 			res.status(200)
 			res.send('Successfully registered user')
 		})
