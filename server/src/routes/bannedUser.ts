@@ -4,7 +4,47 @@ import { verifyAdmin } from '../utils/token_verify'
 
 const bannedUserRouter = express.Router()
 
-bannedUserRouter.post('/register', (req, res) => {
+bannedUserRouter.delete('/:uId', (req, res) => {
+	// check if user is logged in
+	// check if user is an admin
+
+	function unbanUser (): void {
+		BannedUser.destroy({
+			where: { userId: req.params.uId }
+		})
+			.then((result) => {
+				if (result === 1) {
+					res.status(200)
+					res.send('User successfully unbanned')
+				} else {
+					res.status(404)
+					res.send('User could not be found among banned users')
+				}
+			})
+			.catch((e) => {
+				console.error(e)
+				res.status(500)
+				res.send('Failed to unban user')
+			})
+	}
+
+	verifyAdmin(req.cookies.auth_token)
+		.then((admin) => {
+			if (admin) {
+				unbanUser()
+			} else {
+				res.status(500)
+				res.send('User is not an admin')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to check if user was an admin')
+		})
+})
+
+bannedUserRouter.post('/', (req, res) => {
 	function banUser (): void {
 		BannedUser?.findOrCreate({
 			where: {
@@ -42,25 +82,6 @@ bannedUserRouter.post('/register', (req, res) => {
 			res.status(500)
 			res.send('Failed to check if user was an admin')
 		})
-
-	/* try {
-		const body: any = await req.json()
-		// const inputUserId: number = Number(body.userId)
-		const isAdmin: boolean = await verifyAdmin(req)
-
-		if (isAdmin) { // is admin
-			await Course?.create({
-				userId: body.userId,
-				unbanDate: body.unbanDate
-			})
-			return new Response('Successfully created banned user with ID: ' + body.userId)
-		} else {
-			throw new Error('User is not an admin')
-		}
-	} catch (e) {
-		console.error(e)
-		return new Response('Failed to ban user')
-	} */
 })
 
 export default bannedUserRouter
