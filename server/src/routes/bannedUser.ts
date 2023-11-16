@@ -4,7 +4,8 @@ import { verifyAdmin } from '../utils/token_verify'
 
 const bannedUserRouter = express.Router()
 
-bannedUserRouter.delete('/:uId', (req, res) => {
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+bannedUserRouter.delete('/:uId', async (req, res) => {
 	// check if user is logged in
 	// check if user is an admin
 
@@ -28,23 +29,18 @@ bannedUserRouter.delete('/:uId', (req, res) => {
 			})
 	}
 
-	verifyAdmin(req.cookies.auth_token)
-		.then((admin) => {
-			if (admin) {
-				unbanUser()
-			} else {
-				res.status(500)
-				res.send('User is not an admin')
-			}
-		})
-		.catch((e) => {
-			console.error(e)
-			res.status(500)
-			res.send('Failed to check if user was an admin')
-		})
+	const admin = await verifyAdmin(req.cookies.auth_token)
+
+	if (admin) {
+		unbanUser()
+	} else {
+		res.status(500)
+		res.send('User is not an admin')
+	}
 })
 
-bannedUserRouter.post('/', (req, res) => {
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+bannedUserRouter.post('/', async (req, res) => {
 	function banUser (): void {
 		BannedUser?.findOrCreate({
 			where: {
@@ -68,20 +64,14 @@ bannedUserRouter.post('/', (req, res) => {
 			})
 	}
 
-	verifyAdmin(req.cookies.auth_token)
-		.then((admin) => {
-			if (admin) {
-				banUser()
-			} else {
-				res.status(500)
-				res.send('User is not an admin')
-			}
-		})
-		.catch((e) => {
-			console.error(e)
-			res.status(500)
-			res.send('Failed to check if user was an admin')
-		})
+	const admin = await verifyAdmin(req.cookies.auth_token)
+
+	if (admin) {
+		banUser()
+	} else {
+		res.status(500)
+		res.send('User is not an admin')
+	}
 })
 
 export default bannedUserRouter

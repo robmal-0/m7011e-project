@@ -78,6 +78,7 @@ userRouter.post('/login', (req, res) => {
 
 userRouter.post('/auth_token', (req, res) => {
 	console.log(req.cookies)
+	console.log(req.cookies.auth_token)
 	verifyToken(req.cookies.auth_token)
 		.then((user) => {
 			if (user !== undefined) {

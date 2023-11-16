@@ -8,9 +8,9 @@ import bannedUser from './routes/bannedUser'
 
 server.server.use('/user', user)
 server.server.use('/university', university)
-server.server.use('/ratingCourse', ratingCourse)
-server.server.use('/courseParticipation', courseParticipation)
+server.server.use('/course/rating', ratingCourse)
+server.server.use('/course/participation', courseParticipation)
 server.server.use('/course', course)
-server.server.use('/bannedUser', bannedUser)
+server.server.use('/user/banned', bannedUser)
 
 console.log(`Server listening at port ${server.port}`)
