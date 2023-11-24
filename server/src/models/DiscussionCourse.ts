@@ -1,32 +1,44 @@
 import { DataTypes } from 'sequelize'
 import server from '../init'
 import Course from '../models/Course.ts'
+import User from '../models/User.ts'
 
 const DiscussionCourse = server.db.define('DiscussionCourse', {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
-		allowNull: false
+		autoIncrement: true
 	},
-	idCourse: {
+	courseId: {
 		type: DataTypes.INTEGER,
 		allowNull: false
 	},
-	discussionSubject: {
+	userId: {
+		type: DataTypes.INTEGER,
+		allowNull: false
+	},
+	subject: {
 		type: DataTypes.STRING(45),
 		allowNull: false
 	},
-	discussionDescription: {
+	description: {
 		type: DataTypes.STRING(500),
 		allowNull: true
 	}
 })
 
 Course.hasOne(DiscussionCourse, {
-	foreignKey: 'idCourse'
+	foreignKey: 'courseId'
 })
 DiscussionCourse.belongsTo(Course, {
-	foreignKey: 'idCourse'
+	foreignKey: 'courseId'
+})
+
+User.hasOne(DiscussionCourse, {
+	foreignKey: 'userId'
+})
+DiscussionCourse.belongsTo(Course, {
+	foreignKey: 'userId'
 })
 
 DiscussionCourse.sync()

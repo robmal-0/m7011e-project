@@ -16,6 +16,10 @@ Moderator.belongsTo(User, {
 	foreignKey: 'userId'
 })
 
+export interface ModeratorType {
+	userId: number
+}
+
 Moderator.sync()
 	.then(() => { console.log('Created Moderator table') })
 	.catch(() => { console.error('Failed to create Moderator table') })

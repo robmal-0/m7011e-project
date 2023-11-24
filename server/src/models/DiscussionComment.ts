@@ -7,13 +7,14 @@ const DiscussionComment = server.db.define('DiscussionComment', {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
-		allowNull: false
+		allowNull: false,
+		autoIncrement: true
 	},
-	idDiscussionCourse: {
+	discussionCourseId: {
 		type: DataTypes.INTEGER,
 		allowNull: false
 	},
-	idUser: {
+	userId: {
 		type: DataTypes.INTEGER,
 		allowNull: false
 	},
@@ -28,17 +29,17 @@ const DiscussionComment = server.db.define('DiscussionComment', {
 })
 
 DiscussionCourse.hasMany(DiscussionComment, {
-	foreignKey: 'idDiscussionCourse'
+	foreignKey: 'discussionCourseId'
 })
 DiscussionComment.belongsTo(DiscussionCourse, {
-	foreignKey: 'idDiscussionCourse'
+	foreignKey: 'discussionCourseId'
 })
 
 User.hasMany(DiscussionComment, {
-	foreignKey: 'idUser'
+	foreignKey: 'userId'
 })
 DiscussionComment.belongsTo(User, {
-	foreignKey: 'idUser'
+	foreignKey: 'userId'
 })
 
 // References another discussion comment

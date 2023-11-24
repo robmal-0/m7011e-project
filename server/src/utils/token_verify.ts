@@ -44,10 +44,14 @@ export async function verifyAdmin (token: string): Promise<boolean> {
 
 	return await Admin?.count({ where: { userId: claims.id } })
 		.then(count => {
-			if (count !== 0) {
+			if (count === 1) {
 				return true
 			} else {
 				return false
 			}
+		})
+		.catch((e) => {
+			console.error(e)
+			return false
 		})
 }
