@@ -2,6 +2,8 @@ import React, { useState, type FormEvent, type ReactElement, useCallback } from 
 import { useDispatch, useSelector } from 'react-redux'
 import { actions } from '../store'
 import sleep from '../utils/sleep'
+import TextField from '../components/TextField'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login (): ReactElement {
 	const START_ANGLE = 135
@@ -11,8 +13,8 @@ export default function Login (): ReactElement {
 	const [tab, setTab] = useState(Tab.LOGIN)
 	const [logginIn, setLogginIn] = useState(false)
 	const [angle, setAngle] = useState(START_ANGLE)
-	const userState = useSelector((state: any) => state.currentUser)
 	const userDispatcher = useDispatch()
+	const navigate = useNavigate()
 
 	const loadingAnim = useCallback((start: number): void => {
 		const time = Number(new Date()) - start
@@ -55,11 +57,10 @@ export default function Login (): ReactElement {
 			const user = JSON.parse(userData) as User
 			const action = actions.userActions.setUser(user)
 			userDispatcher(action)
-			await sleep(1000)
+			navigate('/')
 		} else {
 			console.error(await res.text())
 		}
-		console.log('DONE')
 		setLogginIn(false)
 		window.clearInterval(inter)
 		setAngle(START_ANGLE)
@@ -69,7 +70,7 @@ export default function Login (): ReactElement {
 		<div className='w-fit h-fit gradient gradient-rotate p-[1px] rounded-xl shadow-md shadow-black mx-auto mt-3' style={{
 			backgroundImage: `linear-gradient(${angle}deg, var(--tw-gradient-stops))`
 		}}>
-			<div className='rounded-xl min-w-40 min-h-40 bg-gray-600 text-gray-100 overflow-clip'>
+			<div className='rounded-xl min-w-[300px] min-h-[200px] bg-gray-600 text-gray-100 overflow-clip'>
 				<div className='grid grid-cols-2 border-b border-gray-400'>
 					<div className={`text-center p-3 cursor-pointer ${tab === Tab.LOGIN ? 'bg-gray-500' : 'hover:bg-gray-400'}`} onClick={() => { setTab(Tab.LOGIN) }}>Login</div>
 					<div className={`text-center p-3 cursor-pointer ${tab === Tab.REGISTER ? 'bg-gray-500' : 'hover:bg-gray-400'}`} onClick={() => { setTab(Tab.REGISTER) }}>Register</div>
@@ -78,23 +79,23 @@ export default function Login (): ReactElement {
 					{{
 						[Tab.LOGIN]: <>
 							<p>Username</p>
-							<input type='text' className='text-gray-700' autoComplete='usr_name' name='username' key='uname'/>
+							<TextField name='username'/>
 							<p>Password</p>
-							<input type='password' className='text-gray-700' autoComplete='pwd' name='password' key='pwd'/>
+							<TextField name='password' password/>
 						</>,
 						[Tab.REGISTER]: <>
 							<p>Username</p>
-							<input type='text' className='text-gray-700' autoComplete='usr_name' name='username' key='uname'/>
+							<TextField name='username'/>
 							<p>Email</p>
-							<input type='text' className='text-gray-700' autoComplete='usr_email' name='email' key='email'/>
+							<TextField name='email'/>
 							<p>First name</p>
-							<input type='text' className='text-gray-700' autoComplete='usr_firstname' name='firstName' key='name1'/>
+							<TextField name='firstName'/>
 							<p>Last name</p>
-							<input type='text' className='text-gray-700' autoComplete='usr_lastname' name='lastName' key='name2'/>
+							<TextField name='lastName'/>
 							<p>Password</p>
-							<input type='password' className='text-gray-700' autoComplete='pwd' name='password' key='pwd'/>
+							<TextField name='password' password/>
 							<p>Confirm password</p>
-							<input type='password' className='text-gray-700' autoComplete='conf_pwd' name='conf_password' key='pwd2'/>
+							<TextField name='conf_password' password/>
 						</>
 					}[tab]}
 					<br />

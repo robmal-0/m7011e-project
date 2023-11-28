@@ -5,7 +5,7 @@ import Moderator, { type ModeratorType } from '../models/Moderator'
 import bcrypt from 'bcryptjs'
 import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-import { verifyToken, verifyAdmin } from '../utils/token_verify'
+import { verifyToken, verifyAdmin, setCookieHeader } from '../utils/token_verify'
 
 const userRouter = express.Router()
 
@@ -61,8 +61,7 @@ userRouter.post('/login', (req, res) => {
 
 		const verified: boolean = await bcrypt.compare(req.body.password, user.password)
 		if (verified) {
-			const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2 h' })
-			res.setHeader('Set-Cookie', cookie.serialize('auth_token', token))
+			setCookieHeader(res, user)
 			res.setHeader('X-User-Data', JSON.stringify(user))
 			res.status(200)
 			res.send('Successfully logged in')
@@ -79,21 +78,21 @@ userRouter.post('/login', (req, res) => {
 })
 
 userRouter.post('/auth_token', (req, res) => {
-	console.log(req.cookies)
-	console.log(req.cookies.auth_token)
 	verifyToken(req.cookies.auth_token)
 		.then((user) => {
 			if (user !== undefined) {
+				setCookieHeader(res, user)
+				res.setHeader('X-User-Data', JSON.stringify(user))
 				res.status(200)
 				res.send('Successfully verified token')
 				return
 			}
 
-			res.status(500)
+			res.status(401)
 			res.send('Failed to verify token')
 		})
 		.catch(() => {
-			res.status(500)
+			res.status(401)
 			res.send('Failed to verify token')
 		})
 	// // console.log('test: ' + typeof user?.id)

@@ -1,6 +1,8 @@
 import User, { type UserType } from '../models/User'
 import Admin from '../models/Admin'
 import jwt from 'jsonwebtoken'
+import { type Response } from 'express'
+import cookie from 'cookie'
 
 export async function verifyToken (token: string): Promise<UserType | undefined> {
 	try {
@@ -54,4 +56,9 @@ export async function verifyAdmin (token: string): Promise<boolean> {
 			console.error(e)
 			return false
 		})
+}
+
+export function setCookieHeader (res: Response, user: UserType): void {
+	const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2 h' })
+	res.setHeader('Set-Cookie', cookie.serialize('auth_token', token, { expires: new Date(Number(new Date()) + 1000 * 60 * 60 * 24), path: '/', domain: 'localhost' }))
 }
