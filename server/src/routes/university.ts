@@ -1,8 +1,4 @@
 import express from 'express'
-/* import bcrypt from 'bcryptjs'
-import cookie from 'cookie'
-import jwt from 'jsonwebtoken'
-import { verifyToken } from '../utils/token_verify' */
 import University from '../models/University'
 
 const universityRouter = express.Router()
