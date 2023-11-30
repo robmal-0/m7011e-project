@@ -3,6 +3,7 @@ import user from './routes/user'
 import university from './routes/university'
 import course from './routes/course'
 
+import admin from './routes/user/admin'
 import moderator from './routes/user/moderator'
 import banned from './routes/user/banned'
 
@@ -11,6 +12,7 @@ import rating from './routes/course/rating'
 import discussion from './routes/course/discussion'
 
 server.server.use('/user', user)
+server.server.use('/user', admin)
 server.server.use('/user', moderator)
 server.server.use('/user', banned)
 server.server.use('/university', university)
