@@ -2,6 +2,7 @@ version: '3'
 services:
   db:
     image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_DATABASE: 'db'
       MYSQL_USER: 'admin'
@@ -9,6 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: 'pwd123'
     volumes:
       - ./db:/var/lib/mysql
+      - ./init_db:/docker-entrypoint-initdb.d
   phpmyadmin:
     image: phpmyadmin
     depends_on:
@@ -37,4 +39,16 @@ services:
     environment:
       SECRET_KEY: 'superSecretKey'
     command: bun run start:dev
+  test:
+    image: oven/bun:latest
+    volumes:
+      - "./server:/app"
+    depends_on:
+      - db
+    working_dir: /app
+    ports:
+      - '3000:3000'
+    environment:
+      SECRET_KEY: 'superSecretKey'
+    command: bun test
     

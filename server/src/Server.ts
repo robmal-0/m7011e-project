@@ -8,7 +8,7 @@ export default class Server {
 	port
 	db
 
-	constructor (port: number, dbUrl: string) {
+	constructor (port: number, dbUrl: string, listener?: (server: Server) => void) {
 		this.port = port
 		// if (dbUrl !== undefined) {
 		this.db = new Sequelize(dbUrl, { logging: false })
@@ -18,7 +18,7 @@ export default class Server {
 		this.server = express()
 		this.server.use(cors({
 			credentials: true,
-			origin: 'http://localhost:7500'
+			origin: '[http://localhost:7500,http://localhost:3000]'
 		}))
 		this.server.use(cookieParser())
 		this.server.use(express.json())
@@ -27,6 +27,6 @@ export default class Server {
 			next()
 		})
 
-		this.server.listen(this.port, () => {})
+		this.server.listen(this.port, () => { listener?.(this) })
 	}
 }
