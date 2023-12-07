@@ -123,24 +123,24 @@ userRouter.delete('/', (req, res) => {
 })
 
 userRouter.get('/', (req, res) => {
-    // maybe add check for logged in?
+	// maybe add check for logged in?
 
-    User.findAll({
-    })
-        .then((found) => {
-            if (found !== null) {
-                res.status(200)
-                res.send(found)
-            } else {
-                res.status(404)
-                res.send('Could not find requested record')
-            }
-        })
-        .catch((e) => {
-            console.error(e)
-            res.status(500)
-            res.send('Failed to find course')
-        })
+	User.findAll({
+	})
+		.then((found) => {
+			if (found !== null) {
+				res.status(200)
+				res.send(found)
+			} else {
+				res.status(404)
+				res.send('Could not find requested record')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to find course')
+		})
 })
 
 export default userRouter
