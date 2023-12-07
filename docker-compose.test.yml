@@ -8,11 +8,13 @@ services:
       MYSQL_PASSWORD: 'pwd123'
       MYSQL_ROOT_PASSWORD: 'pwd123'
     volumes:
-      - ./db:/var/lib/mysql
+      - ./db_test:/var/lib/mysql
   pma_test:
     image: phpmyadmin
     depends_on:
       - db_test
+    environment:
+      PMA_HOST: db_test
     ports:
       - 8080:80
   test:
