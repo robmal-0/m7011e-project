@@ -1,8 +1,8 @@
 import { DataTypes } from 'sequelize'
-import server from '../init'
+import { getServer } from '../Server'
 import User from '../models/User.ts'
 
-const Admin = server.db.define('Admin', {
+const Admin = getServer().db.define('Admin', {
 	userId: {
 		type: DataTypes.INTEGER,
 		primaryKey: true

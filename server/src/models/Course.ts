@@ -1,8 +1,8 @@
 import { DataTypes } from 'sequelize'
-import server from '../init'
+import { getServer } from '../Server'
 import University from './University'
 
-const Course = server.db.define('Course', {
+const Course = getServer().db.define('Course', {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,

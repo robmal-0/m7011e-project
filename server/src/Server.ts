@@ -11,7 +11,9 @@ export default class Server {
 	constructor (port: number, dbUrl: string, listener?: (server: Server) => void) {
 		this.port = port
 		// if (dbUrl !== undefined) {
-		this.db = new Sequelize(dbUrl, { logging: false })
+		this.db = new Sequelize(dbUrl, {
+			logging: false
+		})
 		this.db.authenticate()
 			.then(() => { console.log('Database connection established, port: ' + port + ' URL: ' + dbUrl) })
 			.catch((e) => { console.error('Database connection failed: ' + e) })
@@ -30,3 +32,7 @@ export default class Server {
 		this.server.listen(this.port, () => { listener?.(this) })
 	}
 }
+
+let server: Server
+export function getServer (): Server { return server }
+export function setServer (s: Server): void { server = s }

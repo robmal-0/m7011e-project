@@ -1,9 +1,9 @@
 import { DataTypes } from 'sequelize'
-import server from '../init'
+import { getServer } from '../Server'
 import Course from '../models/Course.ts'
 import User from '../models/User.ts'
 
-const DiscussionCourse = server.db.define('DiscussionCourse', {
+const DiscussionCourse = getServer().db.define('DiscussionCourse', {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,

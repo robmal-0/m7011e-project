@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize'
-import server from '../init'
+import { getServer } from '../Server'
 
-const User = server.db.define('User', {
+const User = getServer().db.define('User', {
 	id: {
 		type: DataTypes.INTEGER,
 		autoIncrement: true,

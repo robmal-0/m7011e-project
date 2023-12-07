@@ -1,8 +1,8 @@
 import { DataTypes } from 'sequelize'
-import server from '../init'
+import { getServer } from '../Server'
 import User from '../models/User'
 
-const BannedUser = server.db.define('BannedUser', {
+const BannedUser = getServer().db.define('BannedUser', {
 	userId: {
 		type: DataTypes.INTEGER,
 		primaryKey: true

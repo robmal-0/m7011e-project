@@ -5,7 +5,8 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "start:dev": "bun run --watch src/index.ts",
-    "lint": "bunx eslint src/*.ts"
+    "lint": "bunx eslint src/*.ts",
+    "test": "bun run test/index.ts"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

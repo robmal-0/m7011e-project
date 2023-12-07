@@ -1,4 +1,3 @@
-import server from './init'
 import user from './routes/user'
 import university from './routes/university'
 import course from './routes/course'
@@ -10,6 +9,9 @@ import banned from './routes/user/banned'
 import participation from './routes/course/participation'
 import rating from './routes/course/rating'
 import discussion from './routes/course/discussion'
+import { getServer } from './Server'
+
+const server = getServer()
 
 server.server.use('/user', user)
 server.server.use('/user', admin)
