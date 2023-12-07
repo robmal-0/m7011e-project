@@ -1,6 +1,5 @@
 import { test, beforeAll, expect, afterAll } from 'bun:test'
 import Server from '../src/Server'
-import userRouter from '../src/routes/user'
 
 let port: number
 beforeAll(async () => {
@@ -9,10 +8,11 @@ beforeAll(async () => {
 		new Server(3000, 'mysql://admin:pwd123@db_test:3306/db_test', (server: Server) => {
 			port = server.port
 			console.log(`Test server running at port ${port}`)
-			server.db.authenticate().then(() => {
+			server.db.authenticate().then(async () => {
 				console.log('Database up and running')
-				// server.server.use('/user', userRouter)
+				const userRouter = await import('../src/routes/user') as any
 				server.server.get('/test', (req, res) => { res.send('Hello!') })
+				server.server.use('/user', userRouter)
 				resolve()
 			}).catch(() => {
 				const msg = 'Failed to connect to database'
