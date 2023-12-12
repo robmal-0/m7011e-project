@@ -1,10 +1,12 @@
 import express from 'express'
 import Admin, { type AdminType } from '../../models/Admin'
 import User from '../../models/User'
+import { requireAdmin } from '../../utils/auth_utils'
 
 const adminRouter = express.Router()
 
 // get info about one specific admin user
+adminRouter.use('/:uId/admin/', requireAdmin())
 adminRouter.get('/:uId/admin/', (req, res) => {
 	// add check user is admin
 
@@ -36,6 +38,7 @@ adminRouter.get('/:uId/admin/', (req, res) => {
 })
 
 // get info about all admin users
+adminRouter.use('/admin/', requireAdmin())
 adminRouter.get('/admin/', (req, res) => {
 	// add check user is admin
 

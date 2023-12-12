@@ -20,7 +20,14 @@ export default class Server {
 		this.server = express()
 		this.server.use(cors({
 			credentials: true,
-			origin: '[http://localhost:7500,http://localhost:3000]'
+			origin: (origin, callback) => {
+				console.log(`checking origin: ${origin}`)
+				if (origin !== undefined && /http:\/\/localhost:\d+.*/.test(origin)) {
+					callback(null, origin)
+				} else {
+					callback(null, '')
+				}
+			}
 		}))
 		this.server.use(cookieParser())
 		this.server.use(express.json())

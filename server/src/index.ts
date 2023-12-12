@@ -1,3 +1,4 @@
+import './init'
 import user from './routes/user'
 import university from './routes/university'
 import course from './routes/course'
@@ -22,8 +23,5 @@ server.server.use('/course', course)
 server.server.use('/course', participation)
 server.server.use('/course', rating)
 server.server.use('/course', discussion)
-server.server.get('/test', (req, res) => {
-	res.send('Hej')
-})
 
 console.log(`Server listening at port ${server.port}`)

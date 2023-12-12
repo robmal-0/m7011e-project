@@ -1,25 +1,14 @@
-import User, { type UserType } from '../models/User'
 import Admin from '../models/Admin'
 import jwt from 'jsonwebtoken'
 import { type Response } from 'express'
 import cookie from 'cookie'
+import { getUser, type UserResult } from './get_user'
 
-export async function verifyToken (token: string): Promise<UserType | undefined> {
+export async function verifyToken (token: string): Promise<UserResult | undefined> {
 	try {
 		const claims = jwt.verify(token, process.env.SECRET_KEY as string) as unknown as claims
 
-		const res: any = await User?.findOne({ where: { id: claims.id } })
-		const user: UserType = {
-			id: res.id,
-			username: res.username,
-			email: res.email,
-			age: res.age,
-			password: res.password,
-			firstName: res.firstName,
-			lastName: res.lastName
-		}
-
-		return user
+		return await getUser('id', claims.id)
 	} catch {
 		return undefined
 	}
@@ -31,7 +20,7 @@ export async function verifyLogin (token: string, userId: number): Promise<[bool
 	const userInfo = await verifyToken(token)
 
 	if (typeof userInfo !== 'undefined') {
-		if (userInfo.id === userId) {
+		if (userInfo.user.id === userId) {
 			return [true, true]
 		} else {
 			return [true, false]
@@ -58,7 +47,24 @@ export async function verifyAdmin (token: string): Promise<boolean> {
 		})
 }
 
-export function setCookieHeader (res: Response, user: UserType): void {
-	const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2 h' })
-	res.setHeader('Set-Cookie', cookie.serialize('auth_token', token, { expires: new Date(Number(new Date()) + 1000 * 60 * 60 * 24), path: '/', domain: 'localhost' }))
+export function setCookieHeader (res: Response, result: UserResult): void {
+	const token = jwt.sign(
+		{
+			id: result.user.id,
+			username: result.user.username,
+			email: result.user.email,
+			privilages: result.privilages
+		},
+		process.env.SECRET_KEY as string,
+		{ expiresIn: '2 h' }
+	)
+	res.setHeader('Set-Cookie', cookie.serialize(
+		'auth_token',
+		token,
+		{
+			expires: new Date(Number(new Date()) + 1000 * 60 * 60 * 24),
+			path: '/',
+			domain: 'localhost'
+		}
+	))
 }
