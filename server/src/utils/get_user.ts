@@ -45,4 +45,6 @@ export const getUser = _.memoize(async (key: Key, value: any): Promise<UserResul
 		user,
 		privilages
 	}
+}, (key, value) => {
+	return [key, value]
 })
