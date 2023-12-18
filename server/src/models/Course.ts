@@ -16,6 +16,13 @@ const Course = getServer().db.define('Course', {
 		type: DataTypes.STRING(45),
 		allowNull: false
 	}
+}, {
+	indexes: [
+		{
+			unique: true,
+			fields: ['code', 'uniId']
+		}
+	]
 })
 
 University.hasMany(Course, {

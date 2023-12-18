@@ -1,9 +1,11 @@
 import express from 'express'
 import University from '../models/University'
+import { requireAdmin } from '../utils/auth_utils'
 
 const universityRouter = express.Router()
+const universityAuthRouter = express.Router()
 
-universityRouter.post('/', (req, res) => {
+universityAuthRouter.post('/', requireAdmin(), (req, res) => {
 	// add check for admin status
 
 	University?.findOrCreate({
@@ -66,7 +68,7 @@ universityRouter.get('/', (req, res) => {
 		})
 })
 
-universityRouter.delete('/:uniId', (req, res) => {
+universityAuthRouter.delete('/:uniId', (req, res) => {
 	// check if user is admin
 
 	University.destroy({
@@ -90,7 +92,7 @@ universityRouter.delete('/:uniId', (req, res) => {
 		})
 })
 
-universityRouter.patch('/:uniId', (req, res) => {
+universityAuthRouter.patch('/:uniId', requireAdmin(), (req, res) => {
 	// check if user is admin
 
 	University.update(req.body, {
@@ -114,4 +116,4 @@ universityRouter.patch('/:uniId', (req, res) => {
 		})
 })
 
-export default universityRouter
+export default [universityRouter, universityAuthRouter]

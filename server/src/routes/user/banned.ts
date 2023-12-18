@@ -14,7 +14,7 @@ banRouter.get('/:uId/banned/', (req, res) => {
 		}
 	})
 		.then((found) => {
-			if (found !== null) {
+			if (found[0] !== undefined) {
 				res.status(200)
 				res.send(found)
 			} else {

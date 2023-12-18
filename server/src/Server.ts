@@ -21,7 +21,6 @@ export default class Server {
 		this.server.use(cors({
 			credentials: true,
 			origin: (origin, callback) => {
-				console.log(`checking origin: ${origin}`)
 				if (origin !== undefined && /http:\/\/localhost:\d+.*/.test(origin)) {
 					callback(null, origin)
 				} else {

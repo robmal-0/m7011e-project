@@ -3,7 +3,7 @@ import User, { type UserType } from '../models/User'
 import Admin from '../models/Admin'
 import Moderator from '../models/Moderator'
 
-export enum Privilages {
+export enum Privileges {
 	USER = 0,
 	MODERATOR = 1,
 	ADMIN = 2
@@ -11,7 +11,7 @@ export enum Privilages {
 
 export interface UserResult {
 	user: UserType
-	privilages: Privilages
+	privileges: Privileges
 }
 
 type Key = 'id' | 'username'
@@ -33,17 +33,17 @@ export const getUser = _.memoize(async (key: Key, value: any): Promise<UserResul
 		lastName: result.lastName
 	}
 
-	// TODO: Set privilages
-	let privilages = Privilages.USER
+	// TODO: Set privileges
+	let privileges = Privileges.USER
 
 	let res = await Moderator.findOne({ where: { userId: user.id } })
-	if (res !== undefined) privilages = Privilages.MODERATOR
+	if (res !== null) privileges = Privileges.MODERATOR
 	res = await Admin.findOne({ where: { userId: user.id } })
-	if (res !== undefined) privilages = Privilages.ADMIN
+	if (res !== null) privileges = Privileges.ADMIN
 
 	return {
 		user,
-		privilages
+		privileges
 	}
 }, (key, value) => {
 	return [key, value]

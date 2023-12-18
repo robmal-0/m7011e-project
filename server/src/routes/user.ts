@@ -45,7 +45,6 @@ userRouter.post('/login', (req, res) => {
 	getUser('username', req.body.username)
 		.then(async (result) => {
 			if (result === undefined) {
-				// new Response('Error user not found', { status: 500 })
 				res.status(401)
 				res.send('Error: user not found')
 				return
@@ -58,6 +57,10 @@ userRouter.post('/login', (req, res) => {
 				res.send('Successfully logged in')
 				return
 			}
+			console.log('body username: ' + req.body.username)
+			console.log('body password: ' + req.body.password)
+			console.log('user username: ' + result.user.username)
+			console.log('user password: ' + result.user.password)
 			res.status(500)
 			res.send('Failed to login')
 		})

@@ -1,4 +1,5 @@
 import './init'
+
 import user from './routes/user'
 import university from './routes/university'
 import course from './routes/course'
@@ -19,7 +20,7 @@ server.server.use('/user', admin)
 server.server.use('/user', moderator)
 server.server.use('/user', banned)
 server.server.use('/university', university)
-server.server.use('/course', course)
+server.server.use('/university', course)
 server.server.use('/course', participation)
 server.server.use('/course', rating)
 server.server.use('/course', discussion)

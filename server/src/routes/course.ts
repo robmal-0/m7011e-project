@@ -1,16 +1,22 @@
 import express from 'express'
 import Course from '../models/Course'
+import { requireAdmin } from '../utils/auth_utils'
 
 const courseRouter = express.Router()
 
 // ----- /course/ -----
 
 // Used to get information about course
-courseRouter.get('/:courseId', (req, res) => {
+courseRouter.get('/:uniId/course/:courseCode', (req, res) => {
 	// maybe add check for logged in?
 
+	// console.log('test:' + res.getHeader('X-User-Privilege'))
+
 	Course.findOne({
-		where: { id: req.params.courseId }
+		where: {
+			code: req.params.courseCode,
+			uniId: req.params.uniId
+		}
 	})
 		.then((found) => {
 			if (found !== null) {
@@ -28,12 +34,13 @@ courseRouter.get('/:courseId', (req, res) => {
 		})
 })
 
-courseRouter.patch('/:courseId', (req, res) => {
+courseRouter.patch('/:uniId/course/:courseCode', requireAdmin(), (req, res) => {
 	// add check if user is admin or a moderator for course
 
 	Course.update(req.body, {
 		where: {
-			id: req.params.courseId
+			uniId: req.params.uniId,
+			code: req.params.courseCode
 		}
 	})
 		.then((saved) => {

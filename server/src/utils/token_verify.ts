@@ -8,7 +8,9 @@ export async function verifyToken (token: string): Promise<UserResult | undefine
 	try {
 		const claims = jwt.verify(token, process.env.SECRET_KEY as string) as unknown as claims
 
-		return await getUser('id', claims.id)
+		const user = await getUser('id', claims.id)
+
+		return user
 	} catch {
 		return undefined
 	}
@@ -31,7 +33,7 @@ export async function verifyLogin (token: string, userId: number): Promise<[bool
 }
 
 export async function verifyAdmin (token: string): Promise<boolean> {
-	const claims = jwt.verify(token, process.env.SECRET_KEY as string) as unknown as claims
+	const claims: any = jwt.verify(token, process.env.SECRET_KEY as string) as unknown as claims
 
 	return await Admin?.count({ where: { userId: claims.id } })
 		.then(count => {
@@ -53,7 +55,7 @@ export function setCookieHeader (res: Response, result: UserResult): void {
 			id: result.user.id,
 			username: result.user.username,
 			email: result.user.email,
-			privilages: result.privilages
+			privilages: result.privileges
 		},
 		process.env.SECRET_KEY as string,
 		{ expiresIn: '2 h' }
