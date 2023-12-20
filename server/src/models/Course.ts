@@ -38,8 +38,4 @@ Course.belongsTo(University, {
 	code: string
 } */
 
-Course.sync()
-	.then(() => { console.log('Created Course table') })
-	.catch((e) => { console.error('Failed to create Course table: ' + e) })
-
 export default Course

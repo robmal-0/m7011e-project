@@ -22,8 +22,4 @@ const University = getServer().db.define('University', {
 	}
 })
 
-University.sync()
-	.then(() => { console.log('Created University table') })
-	.catch(() => { console.error('Failed to create University table') })
-
 export default University

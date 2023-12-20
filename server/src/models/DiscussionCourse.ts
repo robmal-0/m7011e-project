@@ -41,8 +41,4 @@ DiscussionCourse.belongsTo(Course, {
 	foreignKey: 'userId'
 })
 
-DiscussionCourse.sync()
-	.then(() => { console.log('Created DiscussionCourse table') })
-	.catch(() => { console.error('Failed to create DiscussionCourse table') })
-
 export default DiscussionCourse

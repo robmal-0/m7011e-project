@@ -50,8 +50,4 @@ DiscussionComment.belongsTo(DiscussionComment, {
 	foreignKey: 'responseTo'
 })
 
-DiscussionComment.sync()
-	.then(() => { console.log('Created DiscussionComment table') })
-	.catch(() => { console.error('Failed to create DiscussionComment table') })
-
 export default DiscussionComment

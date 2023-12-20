@@ -20,8 +20,4 @@ export interface AdminType {
 	userId: number
 }
 
-Admin.sync()
-	.then(() => { console.log('Created Admin table') })
-	.catch(() => { console.error('Failed to create Admin table') })
-
 export default Admin

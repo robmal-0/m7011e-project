@@ -42,8 +42,4 @@ CourseParticipation.belongsTo(User, {
 	code: string
 } */
 
-CourseParticipation.sync()
-	.then(() => { console.log('Created CourseParticipation table') })
-	.catch((e) => { console.error('Failed to create CourseParticipation table: ' + e) })
-
 export default CourseParticipation

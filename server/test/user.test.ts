@@ -7,15 +7,13 @@ let userAuth: string
 let adminAuth: string
 
 async function createUser (info: any): Promise<Response> {
-	const res = await fetch('http://localhost:3000/user/register', {
+	return await fetch('http://localhost:3000/user/register', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(info)
 	})
-
-	return res
 }
 
 beforeAll(async () => {

@@ -20,8 +20,4 @@ BannedUser.belongsTo(User, {
 	foreignKey: 'userId'
 })
 
-BannedUser.sync()
-	.then(() => { console.log('Created BannedUser table') })
-	.catch(() => { console.error('Failed to create BannedUser table') })
-
 export default BannedUser

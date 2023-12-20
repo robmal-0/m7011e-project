@@ -1,5 +1,5 @@
 import express from 'express'
-import User, { type UserType } from '../models/User'
+import { User, type UserType } from '../models'
 import bcrypt from 'bcryptjs'
 import cookie from 'cookie'
 import jwt from 'jsonwebtoken'

@@ -20,8 +20,4 @@ ReviewCourse.belongsTo(RatingCourse, {
 	foreignKey: 'idRating'
 })
 
-ReviewCourse.sync()
-	.then(() => { console.log('Created ReviewCourse table') })
-	.catch((e) => { console.error('Failed to create ReviewCourse table: ' + e) })
-
 export default ReviewCourse

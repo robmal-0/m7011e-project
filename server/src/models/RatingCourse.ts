@@ -36,8 +36,4 @@ RatingCourse.belongsTo(User, {
 	foreignKey: 'userId'
 })
 
-RatingCourse.sync()
-	.then(() => { console.log('Created RatingCourse table') })
-	.catch((e) => { console.error('Failed to create RatingCourse table: ' + e) })
-
 export default RatingCourse

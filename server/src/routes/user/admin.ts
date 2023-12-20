@@ -1,6 +1,5 @@
 import express from 'express'
-import Admin, { type AdminType } from '../../models/Admin'
-import User from '../../models/User'
+import { Admin, User, type AdminType } from '../../models'
 import { requireAdmin } from '../../utils/auth_utils'
 
 const adminRouter = express.Router()
