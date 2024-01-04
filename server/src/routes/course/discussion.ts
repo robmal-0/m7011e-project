@@ -3,7 +3,7 @@ import slugify from 'slugify'
 import Course from '../../models/Course'
 import DiscussionCourse from '../../models/DiscussionCourse'
 import DiscussionComment from '../../models/DiscussionComment'
-import { requireAdmin } from '../../utils/auth_utils'
+import { requireAdmin, requireModerator } from '../../utils/auth_utils'
 
 const discussionRouter = express.Router()
 
@@ -78,7 +78,7 @@ discussionRouter.post('/:uniId/course/:courseCode/discussion', (req, res) => {
 		})
 })
 
-discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
+discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requireModerator('courseCode'), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion
