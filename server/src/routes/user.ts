@@ -71,8 +71,7 @@ userRouter.post('/login', (req, res) => {
 		})
 })
 
-userRouter.use('/auth_token', requireLogin())
-userRouter.post('/auth_token', (req, res) => {
+userRouter.post('/auth_token', requireLogin(), (req, res) => {
 	res.status(200)
 	res.send('Successfully verified token')
 })

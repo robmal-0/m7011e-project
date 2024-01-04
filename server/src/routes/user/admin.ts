@@ -5,8 +5,7 @@ import { requireAdmin } from '../../utils/auth_utils'
 const adminRouter = express.Router()
 
 // get info about one specific admin user
-adminRouter.use('/:uId/admin/', requireAdmin())
-adminRouter.get('/:uId/admin/', (req, res) => {
+adminRouter.get('/:uId/admin/', requireAdmin(), (req, res) => {
 	// add check user is admin
 
 	Admin.findOne({
@@ -37,8 +36,7 @@ adminRouter.get('/:uId/admin/', (req, res) => {
 })
 
 // get info about all admin users
-adminRouter.use('/admin/', requireAdmin())
-adminRouter.get('/admin/', (req, res) => {
+adminRouter.get('/admin/', requireAdmin(), (req, res) => {
 	// add check user is admin
 
 	Admin.findAll({

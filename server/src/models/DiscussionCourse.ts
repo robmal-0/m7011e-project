@@ -19,7 +19,13 @@ const DiscussionCourse = getServer().db.define('DiscussionCourse', {
 	},
 	subject: {
 		type: DataTypes.STRING(45),
-		allowNull: false
+		allowNull: false,
+		unique: true
+	},
+	slug: {
+		type: DataTypes.STRING(45),
+		allowNull: false,
+		unique: true
 	},
 	description: {
 		type: DataTypes.STRING(500),

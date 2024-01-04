@@ -1,20 +1,41 @@
 import express from 'express'
 import Course from '../models/Course'
-import { requireAdmin } from '../utils/auth_utils'
+import { requireAdmin, requireLogin } from '../utils/auth_utils'
 
 const courseRouter = express.Router()
 
 // ----- /course/ -----
 
-// Used to get information about course
-courseRouter.get('/:uniId/course/:courseCode', (req, res) => {
+// Used to get information about one course at a university
+courseRouter.get('/:uniId/course/:courseCode', requireLogin(), (req, res) => {
 	// maybe add check for logged in?
-
-	// console.log('test:' + res.getHeader('X-User-Privilege'))
 
 	Course.findOne({
 		where: {
 			code: req.params.courseCode,
+			uniId: req.params.uniId
+		}
+	})
+		.then((found) => {
+			if (found !== null) {
+				res.status(200)
+				res.send(found)
+			} else {
+				res.status(404)
+				res.send('Could not find requested record')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to find course')
+		})
+})
+
+// Used to get information about all courses at university
+courseRouter.get('/:uniId/course', requireLogin(), (req, res) => {
+	Course.findAll({
+		where: {
 			uniId: req.params.uniId
 		}
 	})
@@ -59,14 +80,14 @@ courseRouter.patch('/:uniId/course/:courseCode', requireAdmin(), (req, res) => {
 		})
 })
 
-courseRouter.post('/', (req, res) => {
+courseRouter.post('/:uniId/course', requireAdmin(), (req, res) => {
 	// add confirmation that user is logged in and an admin
 
 	Course?.findOrCreate({
 		where: {
 			name: req.body.name,
 			code: req.body.code,
-			uniId: req.body.uniId
+			uniId: req.params.uniId
 		}
 	})
 		.then(([user, created]) => {
@@ -85,12 +106,13 @@ courseRouter.post('/', (req, res) => {
 		})
 })
 
-courseRouter.delete('/:courseId', (req, res) => {
+courseRouter.delete('/:uniId/course/:courseCode', requireAdmin(), (req, res) => {
 	// Add check that user is admin or a moderator over course
 
 	Course.destroy({
 		where: {
-			id: req.params.courseId
+			uniId: req.params.uniId,
+			code: req.params.courseCode
 		}
 	})
 		.then((result) => {

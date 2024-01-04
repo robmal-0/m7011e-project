@@ -1,18 +1,32 @@
 import express from 'express'
+import slugify from 'slugify'
+import Course from '../../models/Course'
 import DiscussionCourse from '../../models/DiscussionCourse'
 import DiscussionComment from '../../models/DiscussionComment'
+import { requireAdmin } from '../../utils/auth_utils'
 
 const discussionRouter = express.Router()
 
 // ------------------------------------------------------------
-// ----- /course/discussion/ -----
+// ----- university/course/discussion/ -----
 
-discussionRouter.get('/:courseId/discussion/:discussionId', (req, res) => {
+discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject', (req, res) => {
 	DiscussionCourse.findOne({
+		attributes: ['subject', 'description'],
 		where: {
-			id: req.params.discussionId,
-			courseId: req.params.courseId
-		}
+			slug: req.params.subject
+		},
+		include: [
+			{
+				model: Course,
+				attributes: ['uniId', 'code'],
+				where: {
+					uniId: req.params.uniId,
+					code: req.params.courseCode
+				},
+				required: true
+			}
+		]
 	})
 		.then((found) => {
 			if (found !== null) {
@@ -30,87 +44,152 @@ discussionRouter.get('/:courseId/discussion/:discussionId', (req, res) => {
 		})
 })
 
-discussionRouter.post('/:courseId/discussion', (req, res) => {
+discussionRouter.post('/:uniId/course/:courseCode/discussion', (req, res) => {
 	// make sure user is logged in
 
-	DiscussionCourse?.create({
-		userId: req.body.userId,
-		courseId: req.params.courseId,
-		subject: req.body.subject,
-		description: req.body.description
+	Course.findOne({
+		where: {
+			uniId: req.params.uniId,
+			code: req.params.courseCode
+		}
 	})
-		.then((created) => {
-			res.status(200)
-			res.send('Discussion has been created')
+		.then((result: any) => {
+			DiscussionCourse?.create({
+				courseId: result.id,
+				userId: req.body.userId,
+				subject: req.body.subject,
+				slug: slugify(req.body.subject),
+				description: req.body.description
+			})
+				.then((created) => {
+					res.status(200)
+					res.send('Discussion has been created')
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to create discussion')
+				})
 		})
-		.catch((e) => {
-			console.error(e)
+		.catch((error) => {
+			console.error(error)
 			res.status(500)
-			res.send('Failed to create discussion')
+			res.send('Failed to find course at university')
 		})
 })
 
-discussionRouter.delete('/:courseId/discussion/:discussionId', (req, res) => {
+discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion
 
-	DiscussionCourse.destroy({
+	Course.findOne({
 		where: {
-			id: req.params.discussionId,
-			courseId: req.params.courseId
-		}
+			uniId: req.params.uniId,
+			code: req.params.courseCode
+		},
+		attributes: ['id']
 	})
 		.then((result) => {
-			if (result === 1) {
-				res.status(200)
-				res.send('The discussion has been removed')
-			} else {
-				res.status(404)
-				res.send('The discussion could not be found')
-			}
+			DiscussionCourse.destroy({
+				where: {
+					slug: req.params.subject,
+					courseId: result?.dataValues.id
+				}
+			})
+				.then((result) => {
+					if (result === 1) {
+						res.status(200)
+						res.send('The discussion has been removed')
+					} else {
+						res.status(404)
+						res.send('The discussion could not be found')
+					}
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to remove the discussion')
+				})
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to remove the discussion')
+			res.send('Failed to get the ID of course')
 		})
 })
 
-discussionRouter.patch('/:courseId/discussion/:discussionId', (req, res) => {
+discussionRouter.patch('/:uniId/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion
 
-	DiscussionCourse.update(req.body, {
+	Course.findOne({
 		where: {
-			id: req.params.discussionId,
-			courseId: req.params.courseId
-		}
+			uniId: req.params.uniId,
+			code: req.params.courseCode
+		},
+		attributes: ['id']
 	})
-		.then((saved) => {
-			if (saved[0] === 1) {
-				res.status(200)
-				res.send('Discussion information was updated')
-			} else {
-				res.status(404)
-				res.send('Could not find discussion')
-			}
+		.then((result) => {
+			console.log('id: ' + result?.dataValues.id, 'subject: ' + req.params.subject)
+			DiscussionCourse.update(req.body, {
+				where: {
+					id: result?.dataValues.id,
+					slug: req.params.subject
+				}
+			})
+				.then((saved) => {
+					if (saved[0] === 1) {
+						res.status(200)
+						res.send('Discussion information was updated')
+					} else {
+						res.status(404)
+						res.send('Could not find discussion')
+					}
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to update discussion information')
+				})
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to update discussion information')
+			res.send('Failed to get the ID of course')
 		})
 })
 
 // ------------------------------------------------------------
 // ----- /course/discussion/comment -----
 
-discussionRouter.post('/:courseId/discussion/:discussionId/comment', (req, res) => {
+discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', (req, res) => {
 	// check user is logged in
 
 	const responseTo = req.body.responseTo !== undefined ? req.body.responseTo : null
+
+	Course.findOne({
+		where: {
+			uniId: req.params.uniId,
+			code: req.params.courseCode
+		},
+		attributes: ['id']
+	})
+		.then((result) => {
+			DiscussionCourse.update(req.body, {
+				where: {
+					id: result?.dataValues.id,
+					slug: req.params.subject
+				}
+			})
+			
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get the ID of course')
+		})
 
 	DiscussionComment?.create({
 		discussionCourseId: req.params.discussionId,
@@ -176,7 +255,7 @@ discussionRouter.get('/:courseId/discussion/:discussionId/comment', (req, res) =
 		})
 })
 
-discussionRouter.delete('/:courseId/discussion/:discussionId/comment/:commentId', (req, res) => {
+discussionRouter.delete('/:courseId/discussion/:discussionId/comment/:commentId', requireAdmin(), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion
@@ -203,7 +282,7 @@ discussionRouter.delete('/:courseId/discussion/:discussionId/comment/:commentId'
 		})
 })
 
-discussionRouter.patch('/:courseId/discussion/:discussionId/comment/:commentId', (req, res) => {
+discussionRouter.patch('/:courseId/discussion/:discussionId/comment/:commentId', requireAdmin(), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion

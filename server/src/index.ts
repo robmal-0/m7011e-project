@@ -23,6 +23,6 @@ server.server.use('/university', university)
 server.server.use('/university', course)
 server.server.use('/course', participation)
 server.server.use('/course', rating)
-server.server.use('/course', discussion)
+server.server.use('/university', discussion)
 
 console.log(`Server listening at port ${server.port}`)

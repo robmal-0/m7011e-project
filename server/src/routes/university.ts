@@ -68,7 +68,7 @@ universityRouter.get('/', (req, res) => {
 		})
 })
 
-universityAuthRouter.delete('/:uniId', (req, res) => {
+universityAuthRouter.delete('/:uniId', requireAdmin(), (req, res) => {
 	// check if user is admin
 
 	University.destroy({
