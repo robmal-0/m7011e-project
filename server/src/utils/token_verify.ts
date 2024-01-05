@@ -65,8 +65,7 @@ export function setCookieHeader (res: Response, result: UserResult): void {
 		token,
 		{
 			expires: new Date(Number(new Date()) + 1000 * 60 * 60 * 24),
-			path: '/',
-			domain: 'localhost'
+			path: '/'
 		}
 	))
 }
