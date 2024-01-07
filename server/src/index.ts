@@ -21,7 +21,7 @@ server.server.use('/user', moderator)
 server.server.use('/user', banned)
 server.server.use('/university', university)
 server.server.use('/university', course)
-server.server.use('/course', participation)
+server.server.use('/university', participation)
 server.server.use('/course', rating)
 server.server.use('/university', discussion)
 

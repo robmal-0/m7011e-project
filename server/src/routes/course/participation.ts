@@ -1,120 +1,191 @@
 import express from 'express'
 import CourseParticipation from '../../models/CourseParticipation'
 import jwt from 'jsonwebtoken'
+import { requireLogin } from '../../utils/auth_utils'
+import Course from '../../models/Course'
+import User from '../../models/User'
 
 const participationRouter = express.Router()
 
-participationRouter.post('/:courseId/participation', (req, res) => {
-	// add confirmation that user is logged in
+participationRouter.post('/:uniId/course/:courseCode/participation', requireLogin(), (req, res) => {
+	// add confirmation that user is logged in, done
 
-	CourseParticipation?.findOrCreate({
+	const uId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
+
+	Course.findOne({
 		where: {
-			courseId: req.params.courseId,
-			userId: req.body.userId,
-			courseStart: req.body.courseStart,
-			courseEnd: req.body.courseEnd
+			uniId: req.params.uniId,
+			code: req.params.courseCode
 		}
 	})
-		.then(([user, created]) => {
-			if (created) {
-				res.status(201)
-				res.send('User was registered for course')
-			} else {
-				res.status(200)
-				res.send('User was already registered for course')
-			}
+		.then((found) => {
+			CourseParticipation?.findOrCreate({
+				where: {
+					courseId: found?.dataValues.id,
+					userId: uId,
+					courseStart: req.body.courseStart,
+					courseEnd: req.body.courseEnd
+				}
+			})
+				.then(([user, created]) => {
+					if (created) {
+						res.status(201)
+						res.send('User was registered for course')
+					} else {
+						res.status(200)
+						res.send('User was already registered for course')
+					}
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to register for course')
+				})
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to register for course')
+			res.send('Failed to get information about course')
 		})
 })
 
-participationRouter.patch('/:courseId/participation/:userId', (req, res) => {
-	// add check: if trying to remove other user from course, check if admin
+participationRouter.patch('/:uniId/course/:courseCode/participation/:username', (req, res) => {
+	// check if user is admin, moderator for course, or the user themselves
 
-	CourseParticipation.update(req.body, {
+	Course.findOne({
 		where: {
-			courseId: req.params.courseId,
-			userId: req.params.userId
-		}
+			uniId: req.params.uniId,
+			code: req.params.courseCode
+		},
+		attributes: ['id']
 	})
-		.then((saved) => {
-			if (saved[0] === 1) {
-				res.status(200)
-				res.send('Participation was updated')
-			} else {
-				res.status(404)
-				res.send('Could not find courseId or userId')
-			}
+		.then((found1) => {
+			User.findOne({
+				where: {
+					username: req.params.username
+				},
+				attributes: ['id']
+			})
+				.then((found2) => {
+					CourseParticipation.update(req.body, {
+						where: {
+							courseId: found1?.dataValues.id,
+							userId: found2?.dataValues.id
+						}
+					})
+						.then((saved) => {
+							if (saved[0] === 1) {
+								res.status(200)
+								res.send('Participation was updated')
+							} else {
+								res.status(404)
+								res.send('Could not find courseId or userId')
+							}
+						})
+						.catch((e) => {
+							console.error(e)
+							res.status(500)
+							res.send('Failed to update participation in course')
+						})
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to get information about user')
+				})
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to update participation in course')
+			res.send('Failed to get information about course')
 		})
 })
 
-participationRouter.delete('/:courseId/participation', (req, res) => {
-	// add check: if trying to remove other user from course, check if admin
-	const claims = jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims
-	const userId = req.body.userId !== undefined ? req.body.userId : claims.id
+participationRouter.delete('/:uniId/course/:courseCode/participation/:username', (req, res) => {
+	// check if user is admin, moderator for course, or the user themselves
 
-	CourseParticipation.destroy({
+	Course.findOne({
 		where: {
-			courseId: req.params.courseId,
-			userId
-		}
+			uniId: req.params.uniId,
+			code: req.params.courseCode
+		},
+		attributes: ['id']
 	})
-		.then((result) => {
-			if (result === 1) {
-				res.status(200)
-				res.send('User was removed from course')
-			} else {
-				res.status(404)
-				res.send('User could not be found')
-			}
+		.then((found1) => {
+			User.findOne({
+				where: {
+					username: req.params.username
+				},
+				attributes: ['id']
+			})
+				.then((found2) => {
+					CourseParticipation.destroy({
+						where: {
+							courseId: found1?.dataValues.id,
+							userId: found2?.dataValues.id
+						}
+					})
+						.then((result) => {
+							if (result === 1) {
+								res.status(200)
+								res.send('User was removed from course')
+							} else {
+								res.status(404)
+								res.send('User could not be found')
+							}
+						})
+						.catch((e) => {
+							console.error(e)
+							res.status(500)
+							res.send('Failed to remove user from course')
+						})
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to get information about user')
+				})
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to remove user from course')
+			res.send('Failed to get information about course')
 		})
 })
 
-participationRouter.get('/:courseId/participation/', (req, res) => {
-	// const courseId = req.query.course !== undefined ? String(req.query.course) : null
-	const courseId = req.params.courseId
-	const userId = req.query.user !== undefined ? String(req.query.user) : null
+participationRouter.get('/:uniId/course/:courseCode/participation/', (req, res) => {
+	const username = req.query.user !== undefined ? String(req.query.user) : undefined
+	console.log(username)
 
 	let whereClause
 
-	if (courseId !== null && userId !== null) {
+	if (username !== undefined) {
 		whereClause = {
-			courseId,
-			userId
+			username
 		}
 	} else {
-		whereClause = { courseId }
+		whereClause = {}
 	}
 
 	CourseParticipation.findAll({
-		where: whereClause
-	})
-		.then((found) => {
-			if (found !== null) {
-				res.status(200)
-				res.send(found)
-			} else {
-				res.status(404)
-				res.send('Could not find any participation information for the given parameters')
+		include: [{
+			model: Course,
+			where: {
+				uniId: req.params.uniId,
+				code: req.params.courseCode
 			}
+		}, {
+			model: User,
+			where: whereClause
+		}]
+	})
+		.then((result) => {
+			console.log(result.length)
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to get information about participation')
+			res.send('Failed to get information about course')
 		})
 })
 
