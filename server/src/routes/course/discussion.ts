@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 import Course from '../../models/Course'
 import DiscussionCourse from '../../models/DiscussionCourse'
 import DiscussionComment from '../../models/DiscussionComment'
-import { requireAdmin, requireLogin } from '../../utils/auth_utils'
+import { requireAdmin, requireModerator } from '../../utils/auth_utils'
 import User from '../../models/User'
 
 const discussionRouter = express.Router()
@@ -80,7 +80,7 @@ discussionRouter.post('/:uniId/course/:courseCode/discussion', (req, res) => {
 		})
 })
 
-discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
+discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requireModerator('courseCode'), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion
@@ -166,7 +166,7 @@ discussionRouter.patch('/:uniId/course/:courseCode/discussion/:subject', require
 // ------------------------------------------------------------
 // ----- /course/discussion/comment -----
 
-discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', requireLogin(), (req, res) => {
+discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', (req, res) => {
 	// check user is logged in
 
 	const responseTo = req.body.responseTo !== undefined ? req.body.responseTo : null
