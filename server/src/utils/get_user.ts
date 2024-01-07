@@ -36,6 +36,7 @@ export const getUser = _.memoize(async (key: Key, value: any): Promise<UserResul
 	// TODO: Set privileges
 	let privileges = Privileges.USER
 
+	console.log('userId: ' + user.id)
 	let res = await Moderator.findOne({ where: { userId: user.id } })
 	if (res !== null) privileges = Privileges.MODERATOR
 	res = await Admin.findOne({ where: { userId: user.id } })

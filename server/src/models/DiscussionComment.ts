@@ -4,11 +4,16 @@ import DiscussionCourse from '../models/DiscussionCourse.ts'
 import User from '../models/User.ts'
 
 const DiscussionComment = getServer().db.define('DiscussionComment', {
+
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
 		allowNull: false,
 		autoIncrement: true
+	},
+	localId: { // given to comments in a discussion, the first comment will have localId = 1
+		type: DataTypes.INTEGER,
+		allowNull: false
 	},
 	discussionCourseId: {
 		type: DataTypes.INTEGER,
@@ -43,11 +48,17 @@ DiscussionComment.belongsTo(User, {
 })
 
 // References another discussion comment
-DiscussionComment.hasOne(DiscussionComment, {
-	foreignKey: 'responseTo'
-})
 DiscussionComment.belongsTo(DiscussionComment, {
-	foreignKey: 'responseTo'
+	foreignKey: 'responseTo',
+	as: 'parentComment'
 })
+DiscussionComment.hasMany(DiscussionComment, {
+	foreignKey: 'responseTo',
+	as: 'replies'
+})
+
+DiscussionComment.sync()
+	.then(() => { console.log('Created DiscussionComment table') })
+	.catch(() => { console.error('Failed to create DiscussionComment table') })
 
 export default DiscussionComment
