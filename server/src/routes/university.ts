@@ -49,7 +49,7 @@ universityRouter.get('/', (req, res) => {
 	if (req.query.city !== undefined) {
 		options.where.city = req.query.city
 	}
-	if (req.query.city !== undefined) {
+	if (req.query.country !== undefined) {
 		options.where.country = req.query.country
 	}
 
@@ -70,12 +70,12 @@ universityRouter.get('/', (req, res) => {
 		})
 })
 
-universityAuthRouter.delete('/:uniId', requireAdmin(), (req, res) => {
-	// check if user is admin
+universityAuthRouter.delete('/:uniSlug', requireAdmin(), (req, res) => {
+	// check if user is admin, done
 
 	University.destroy({
 		where: {
-			id: req.params.uniId
+			slug: req.params.uniSlug
 		}
 	})
 		.then((result) => {
@@ -94,12 +94,12 @@ universityAuthRouter.delete('/:uniId', requireAdmin(), (req, res) => {
 		})
 })
 
-universityAuthRouter.patch('/:uniId', requireAdmin(), (req, res) => {
-	// check if user is admin
+universityAuthRouter.patch('/:uniSlug', requireAdmin(), (req, res) => {
+	// check if user is admin, done
 
 	University.update(req.body, {
 		where: {
-			id: req.params.uniId
+			slug: req.params.uniSlug
 		}
 	})
 		.then((saved) => {
