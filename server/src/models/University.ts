@@ -12,6 +12,11 @@ const University = getServer().db.define('University', {
 		unique: true,
 		allowNull: false
 	},
+	slug: {
+		type: DataTypes.STRING(45),
+		unique: true,
+		allowNull: false
+	},
 	country: {
 		type: DataTypes.STRING(45),
 		allowNull: false

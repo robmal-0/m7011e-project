@@ -1,6 +1,7 @@
 import express from 'express'
 import University from '../models/University'
 import { requireAdmin } from '../utils/auth_utils'
+import slugify from 'slugify'
 
 const universityRouter = express.Router()
 const universityAuthRouter = express.Router()
@@ -11,6 +12,7 @@ universityAuthRouter.post('/', requireAdmin(), (req, res) => {
 	University?.findOrCreate({
 		where: {
 			name: req.body.name,
+			slug: slugify(req.body.name),
 			country: req.body.country,
 			city: req.body.city
 		}

@@ -22,7 +22,7 @@ server.server.use('/user', banned)
 server.server.use('/university', university)
 server.server.use('/university', course)
 server.server.use('/university', participation)
-server.server.use('/course', rating)
 server.server.use('/university', discussion)
+server.server.use('/university', rating)
 
 console.log(`Server listening at port ${server.port}`)

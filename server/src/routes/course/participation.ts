@@ -180,7 +180,13 @@ participationRouter.get('/:uniId/course/:courseCode/participation/', (req, res) 
 		}]
 	})
 		.then((result) => {
-			console.log(result.length)
+			if (result !== undefined) {
+				res.status(200)
+				res.send(result)
+			} else {
+				res.status(404)
+				res.send('User(s) could not be found')
+			}
 		})
 		.catch((e) => {
 			console.error(e)

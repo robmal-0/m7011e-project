@@ -1,166 +1,234 @@
 import express from 'express'
 import RatingCourse from '../../models/RatingCourse'
 import jwt from 'jsonwebtoken'
-import { verifyLogin } from '../../utils/token_verify'
+import Course from '../../models/Course'
+import { University, User } from '../../models'
+import { type Model } from 'sequelize'
 
 const ratingRouter = express.Router()
 
-// login functions
-function loginStatus (auth: boolean, match: boolean): [boolean, string] {
-	// add something for admin users being able to remove other users ratings?
+// find rating function
+function findRating (whereClause: any, code: any, slug: any): Model<any, any> | null | any {
+	console.log(whereClause, code, slug)
+	return RatingCourse.findOne({
+		include: [{
+			model: Course,
+			where: {
+				code
+			},
+			attributes: ['id'],
+			include: [{
+				model: University,
+				where: {
+					slug
+				}
+			}]
+		}, {
+			model: User,
+			where: whereClause,
+			attributes: ['id']
+		}]
+	})
+}
 
-	if (auth) { // can authenticate
-		if (match) { // user id matches authentication id
-			return [true, 'User has been authenticated']
-		} else {
-			return [false, 'User is using other users id']
+ratingRouter.post('/:uniSlug/course/:courseCode/rating', (req, res) => {
+	// check that user is logged in
+	const userId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
+
+	University.findOne({
+		where: {
+			slug: req.params.uniSlug
+		},
+		include: [{
+			model: Course,
+			where: {
+				code: req.params.courseCode
+			},
+			attributes: ['id']
+		}],
+		attributes: ['id']
+	})
+		.then((result) => {
+			RatingCourse?.findOrCreate({
+				where: {
+					userId,
+					courseId: result?.dataValues.Courses[0].dataValues.id,
+					stars: req.body.stars
+				}
+			})
+				.then(([user, created]) => {
+					if (created) {
+						res.status(201)
+						res.send('Successfully rated course')
+					} else {
+						res.status(200)
+						res.send('Course was already rated ' + req.body.stars + ' stars')
+					}
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to find or create rating for course')
+				})
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get information about course')
+		})
+})
+
+ratingRouter.patch('/:uniSlug/course/:courseCode/rating', (req, res) => {
+	// check if user is admin or user that created rating
+
+	const userId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
+
+	const username = req.query.user !== undefined ? String(req.query.user) : undefined
+
+	let whereClause
+
+	// if username is set use that, otherwise use userId
+	if (username !== undefined) {
+		whereClause = {
+			username
 		}
 	} else {
-		return [false, 'User is of type undefined']
+		whereClause = {
+			id: userId
+		}
 	}
-}
 
-function login (req: any, res: any, func: () => any): void {
-	const inputUserId: number = req.body.userId
-
-	if (req.body.userId !== undefined) { // if user is trying to do something for a specific user
-		verifyLogin(req.cookies.auth_token, inputUserId)
-			.then(([auth, match]) => {
-				const [loggedIn, message] = loginStatus(auth, match)
-				if (loggedIn) {
-					func()
-				} else {
+	findRating(whereClause, req.params.courseCode, req.params.uniSlug)
+		.then((result: Model<any, any> | null) => {
+			RatingCourse.update(req.body, {
+				where: {
+					userId: result?.dataValues.User.id,
+					courseId: result?.dataValues.Course.id
+				}
+			})
+				.then((saved) => {
+					if (saved[0] === 1) {
+						res.status(200)
+						res.send('Rating was updated')
+					} else {
+						res.status(404)
+						res.send('Could not find courseId or userId')
+					}
+				})
+				.catch((e) => {
+					console.error(e)
 					res.status(500)
-					res.send(message)
-				}
-			})
-			.catch((e) => {
-				console.log(e)
-			})
-	} else { // if they are trying to change something for themselves
-		func()
-	}
-}
-
-ratingRouter.post('/:courseId/rating', (req, res) => {
-	function createCourseRating (): void { // local function to create a course rating
-		const claims = jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims
-		const userId = req.body.userId !== undefined ? req.body.userId : claims.id // Check if userId has been sent as JSON
-
-		RatingCourse?.findOrCreate({
-			where: {
-				userId,
-				courseId: req.params.courseId,
-				stars: req.body.stars
-			}
+					res.send('Failed to update rating')
+				})
 		})
-			.then(([user, created]) => {
-				if (created) {
-					res.status(201)
-					res.send('Successfully rated course')
-				} else {
-					res.status(200)
-					res.send('Course was already rated ' + req.body.stars + ' stars')
-				}
-			})
-			.catch((e) => {
-				console.error(e)
-				res.status(500)
-				res.send('Failed to rate course')
-			})
-	}
-
-	login(req, res, createCourseRating)
+		.catch((e: any) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get information about rating')
+		})
 })
 
-ratingRouter.patch('/:courseId/rating/', (req, res) => {
-	function patchCourseRating (): void {
-		const claims = jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims
-		const userId = req.body.userId !== undefined ? req.body.userId : claims.id // Check if userId has been sent as JSON
+ratingRouter.delete('/:uniSlug/course/:courseCode/rating', (req, res) => {
+	// check if user is admin or user that created rating
 
-		RatingCourse?.update({ stars: req.body.stars }, {
-			where: {
-				userId,
-				courseId: req.params.courseId
-			}
-		})
-			.then((saved) => {
-				if (saved[0] === 1) {
-					res.status(200)
-					res.send('Rating was updated')
-				} else {
-					res.status(404)
-					res.send('Could not find courseId or userId')
-				}
-			})
-			.catch((e) => {
-				console.error(e)
-				res.status(500)
-				res.send('Failed to update participation in course')
-			})
+	const userId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
+
+	const username = req.query.user !== undefined ? String(req.query.user) : undefined
+
+	let whereClause
+
+	// if username is set use that, otherwise use userId
+	if (username !== undefined) {
+		whereClause = {
+			username
+		}
+	} else {
+		whereClause = {
+			id: userId
+		}
 	}
 
-	login(req, res, patchCourseRating)
+	findRating(whereClause, req.params.courseCode, req.params.uniSlug)
+		.then((result: Model<any, any> | null) => {
+			console.log(result?.dataValues)
+			RatingCourse.destroy({
+				where: {
+					userId: result?.dataValues.User.id,
+					courseId: result?.dataValues.Course.id
+				}
+			})
+				.then((result) => {
+					if (result === 1) {
+						res.status(200)
+						res.send('Rating was removed')
+					} else {
+						res.status(404)
+						res.send('Could not find courseId or userId')
+					}
+				})
+				.catch((e) => {
+					console.error(e)
+					res.status(500)
+					res.send('Failed to remove rating')
+				})
+		})
+		.catch((e: any) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get information about rating')
+		})
 })
 
-ratingRouter.delete('/:courseId/rating', (req, res) => {
-	function removeCourseRating (): void {
-		const claims = jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims
-		const userId = req.body.userId !== undefined ? req.body.userId : claims.id // Check if userId has been sent as JSON
+ratingRouter.get('/:uniSlug/course/:courseCode/rating', (req, res) => {
+	const username = req.query.user !== undefined ? String(req.query.user) : undefined
 
-		RatingCourse.destroy({
-			where: {
-				userId,
-				courseId: req.params.courseId
-			}
-		})
-			.then((result) => {
-				if (result === 1) {
-					res.status(200)
-					res.send('Successfully removed rating')
-				} else {
-					res.status(404)
-					res.send('Could not find rating to remove')
-				}
-			})
-			.catch((e) => {
-				console.error(e)
-				res.status(500)
-				res.send('Failed to remove rating')
-			})
+	let whereClause
+
+	// if username is set use that, otherwise get all users
+	if (username !== undefined) {
+		whereClause = {
+			username
+		}
+	} else {
+		whereClause = {}
 	}
 
-	login(req, res, removeCourseRating)
-})
-
-ratingRouter.get('/:courseId/rating/', (req, res) => {
-	function getCourseRating (): void {
-		const claims = jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims
-		const userId = req.query.userId ?? claims.id // Check if userId has been sent as query
-
-		RatingCourse.findAll({
+	RatingCourse.findAll({
+		include: [{
+			model: Course,
 			where: {
-				userId,
-				courseId: req.params.courseId
+				code: req.params.courseCode
+			},
+			attributes: ['name', 'code'],
+			include: [{
+				model: University,
+				where: {
+					slug: req.params.uniSlug
+				},
+				attributes: ['name']
+			}]
+		}, {
+			model: User,
+			where: whereClause,
+			attributes: ['username']
+		}],
+		attributes: ['stars']
+	})
+		.then((result) => {
+			console.log(result.length)
+			if (result !== undefined && result.length !== 0) {
+				res.status(200)
+				res.send(result)
+			} else {
+				res.status(404)
+				res.send('Rating(s) could not be found')
 			}
 		})
-			.then((found) => {
-				if (found !== null) {
-					res.status(200)
-					res.send(found)
-				} else {
-					res.status(404)
-					res.send('Could not find any rating for the given parameters')
-				}
-			})
-			.catch((e) => {
-				console.error(e)
-				res.status(500)
-				res.send('Failed to get information about rating')
-			})
-	}
-
-	login(req, res, getCourseRating)
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get information about rating')
+		})
 })
 
 export default ratingRouter
