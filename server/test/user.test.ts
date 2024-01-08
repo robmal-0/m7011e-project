@@ -147,7 +147,7 @@ describe('admin tests', () => {
 	})
 
 	test('search for one specific admin', async () => {
-		const res = await fetch('http://localhost:3000/user/1/admin', {
+		const res = await fetch('http://localhost:3000/user/testadmin/admin', {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: {
@@ -194,7 +194,7 @@ describe('admin tests', () => {
 		secondAdminId = userId
 
 		// make that user into an admin using the API as previously created admin
-		const resMakeAdmin = await fetch('http://127.0.0.1:3000/user/' + userId.id + '/admin', {
+		const resMakeAdmin = await fetch('http://127.0.0.1:3000/user/' + userId.username + '/admin', {
 			method: 'POST',
 			credentials: 'same-origin',
 			headers: {
@@ -226,6 +226,7 @@ describe('admin tests', () => {
 })
 
 describe('banned tests', () => {
+	let bannedUsername: string
 	let bannedId: string
 
 	test('ban a user', async () => {
@@ -244,13 +245,14 @@ describe('banned tests', () => {
 		const bannedUserInfo = JSON.parse(resBannedUser.headers.get('x-user-data') ?? '{}')
 
 		bannedId = bannedUserInfo.id
+		bannedUsername = bannedUserInfo.username
 
 		// ban user
 		const banInfo = {
 			unbanDate: '2023-12-24'
 		}
 
-		const resBanUser = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const resBanUser = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'POST',
 			credentials: 'same-origin',
 			headers: {
@@ -263,26 +265,28 @@ describe('banned tests', () => {
 		expect(resBanUser.status).toBe(201)
 
 		// confirm that user has been banned
-		const resBanInfo = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const resBanInfo = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
 			}
 		})
 
 		const bannedGet: any = await resBanInfo.json()
 
-		expect(bannedGet[0].userId).toBe(bannedId)
+		expect(bannedGet.User.id).toBe(bannedId)
 	})
 
 	test('search for banned user', async () => {
 		// get information about banned user
-		const res = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const res = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
 			}
 		})
 
@@ -296,7 +300,8 @@ describe('banned tests', () => {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
 			}
 		})
 
@@ -310,7 +315,7 @@ describe('banned tests', () => {
 			unbanDate: '2023-12-28'
 		}
 
-		const res = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const res = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'PATCH',
 			credentials: 'same-origin',
 			headers: {
@@ -323,22 +328,23 @@ describe('banned tests', () => {
 		expect(res.status).toBe(200)
 
 		// confirm that the information has been updated
-		const resDate = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const resDate = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
 			}
 		})
 
 		const unbanDate: any = await resDate.json()
 
-		expect(unbanDate[0].unbanDate).toBe('2023-12-28')
+		expect(unbanDate.unbanDate).toBe('2023-12-28')
 	})
 
 	test('unban a user', async () => {
 		// remove user from banned list
-		const res = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const res = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'DELETE',
 			credentials: 'same-origin',
 			headers: {
@@ -350,11 +356,12 @@ describe('banned tests', () => {
 		expect(res.status).toBe(200)
 
 		// confirm that the user has been unbanned
-		const resDate = await fetch('http://localhost:3000/user/' + bannedId + '/banned/', {
+		const resDate = await fetch('http://localhost:3000/user/' + bannedUsername + '/banned/', {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
 			}
 		})
 
