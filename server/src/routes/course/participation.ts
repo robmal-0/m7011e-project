@@ -4,19 +4,26 @@ import jwt from 'jsonwebtoken'
 import { requireLogin } from '../../utils/auth_utils'
 import Course from '../../models/Course'
 import User from '../../models/User'
+import { University } from '../../models'
 
 const participationRouter = express.Router()
 
-participationRouter.post('/:uniId/course/:courseCode/participation', requireLogin(), (req, res) => {
+participationRouter.post('/:uniSlug/course/:courseCode/participation', requireLogin(), (req, res) => {
 	// add confirmation that user is logged in, done
 
 	const uId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
 
 	Course.findOne({
 		where: {
-			uniId: req.params.uniId,
 			code: req.params.courseCode
-		}
+		},
+		attributes: ['id'],
+		include: [{
+			model: University,
+			where: {
+				slug: req.params.uniSlug
+			}
+		}]
 	})
 		.then((found) => {
 			CourseParticipation?.findOrCreate({
@@ -49,15 +56,20 @@ participationRouter.post('/:uniId/course/:courseCode/participation', requireLogi
 		})
 })
 
-participationRouter.patch('/:uniId/course/:courseCode/participation/:username', (req, res) => {
+participationRouter.patch('/:uniSlug/course/:courseCode/participation/:username', (req, res) => {
 	// check if user is admin, moderator for course, or the user themselves
 
 	Course.findOne({
 		where: {
-			uniId: req.params.uniId,
 			code: req.params.courseCode
 		},
-		attributes: ['id']
+		attributes: ['id'],
+		include: [{
+			model: University,
+			where: {
+				slug: req.params.uniSlug
+			}
+		}]
 	})
 		.then((found1) => {
 			User.findOne({
@@ -101,15 +113,20 @@ participationRouter.patch('/:uniId/course/:courseCode/participation/:username', 
 		})
 })
 
-participationRouter.delete('/:uniId/course/:courseCode/participation/:username', (req, res) => {
+participationRouter.delete('/:uniSlug/course/:courseCode/participation/:username', (req, res) => {
 	// check if user is admin, moderator for course, or the user themselves
 
 	Course.findOne({
 		where: {
-			uniId: req.params.uniId,
 			code: req.params.courseCode
 		},
-		attributes: ['id']
+		attributes: ['id'],
+		include: [{
+			model: University,
+			where: {
+				slug: req.params.uniSlug
+			}
+		}]
 	})
 		.then((found1) => {
 			User.findOne({
@@ -153,9 +170,8 @@ participationRouter.delete('/:uniId/course/:courseCode/participation/:username',
 		})
 })
 
-participationRouter.get('/:uniId/course/:courseCode/participation/', (req, res) => {
+participationRouter.get('/:uniSlug/course/:courseCode/participation/', (req, res) => {
 	const username = req.query.user !== undefined ? String(req.query.user) : undefined
-	console.log(username)
 
 	let whereClause
 
@@ -170,17 +186,25 @@ participationRouter.get('/:uniId/course/:courseCode/participation/', (req, res) 
 	CourseParticipation.findAll({
 		include: [{
 			model: Course,
+			attributes: ['id', 'name', 'code'],
 			where: {
-				uniId: req.params.uniId,
 				code: req.params.courseCode
-			}
+			},
+			include: [{
+				model: University,
+				attributes: ['id', 'name', 'country', 'city'],
+				where: {
+					slug: req.params.uniSlug
+				}
+			}]
 		}, {
 			model: User,
+			attributes: ['id', 'username'],
 			where: whereClause
 		}]
 	})
 		.then((result) => {
-			if (result !== undefined) {
+			if (result !== undefined && result.length !== 0) {
 				res.status(200)
 				res.send(result)
 			} else {

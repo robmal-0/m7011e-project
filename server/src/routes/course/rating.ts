@@ -9,7 +9,6 @@ const ratingRouter = express.Router()
 
 // find rating function
 function findRating (whereClause: any, code: any, slug: any): Model<any, any> | null | any {
-	console.log(whereClause, code, slug)
 	return RatingCourse.findOne({
 		include: [{
 			model: Course,

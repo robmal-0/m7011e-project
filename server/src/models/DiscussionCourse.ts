@@ -41,9 +41,10 @@ DiscussionCourse.belongsTo(Course, {
 })
 
 User.hasOne(DiscussionCourse, {
-	foreignKey: 'userId'
+	foreignKey: 'userId',
+	as: 'userKey'
 })
-DiscussionCourse.belongsTo(Course, {
+DiscussionCourse.belongsTo(User, {
 	foreignKey: 'userId'
 })
 

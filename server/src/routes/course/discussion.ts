@@ -6,29 +6,34 @@ import DiscussionCourse from '../../models/DiscussionCourse'
 import DiscussionComment from '../../models/DiscussionComment'
 import { requireAdmin, requireModerator } from '../../utils/auth_utils'
 import User from '../../models/User'
+import { University } from '../../models'
 
 const discussionRouter = express.Router()
 
 // ------------------------------------------------------------
 // ----- university/course/discussion/ -----
 
-discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject', (req, res) => {
+discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject', (req, res) => {
 	DiscussionCourse.findOne({
 		attributes: ['subject', 'description'],
 		where: {
 			slug: req.params.subject
 		},
-		include: [
-			{
-				model: Course,
-				attributes: ['uniId', 'code'],
+		include: [{
+			model: Course,
+			attributes: ['code'],
+			where: {
+				code: req.params.courseCode
+			},
+			required: true,
+			include: [{
+				model: University,
 				where: {
-					uniId: req.params.uniId,
-					code: req.params.courseCode
+					slug: req.params.uniSlug
 				},
-				required: true
-			}
-		]
+				attributes: ['name', 'country', 'city']
+			}]
+		}]
 	})
 		.then((found) => {
 			if (found !== null) {
@@ -46,26 +51,41 @@ discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject', (req, res
 		})
 })
 
-discussionRouter.post('/:uniId/course/:courseCode/discussion', (req, res) => {
+discussionRouter.post('/:uniSlug/course/:courseCode/discussion', (req, res) => {
 	// make sure user is logged in
+
+	const uId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
 
 	Course.findOne({
 		where: {
-			uniId: req.params.uniId,
 			code: req.params.courseCode
-		}
+		},
+		include: [{
+			model: University,
+			where: {
+				slug: req.params.uniSlug
+			}
+		}],
+		attributes: ['id']
 	})
 		.then((result: any) => {
-			DiscussionCourse?.create({
-				courseId: result.id,
-				userId: req.body.userId,
-				subject: req.body.subject,
-				slug: slugify(req.body.subject),
-				description: req.body.description
+			DiscussionCourse?.findOrCreate({
+				where: {
+					courseId: result.dataValues.id,
+					userId: uId,
+					subject: req.body.subject,
+					slug: slugify(req.body.subject),
+					description: req.body.description
+				}
 			})
-				.then((created) => {
-					res.status(200)
-					res.send('Discussion has been created')
+				.then(([user, created]) => {
+					if (created) {
+						res.status(201)
+						res.send('Discussion has been created')
+					} else {
+						res.status(200)
+						res.send('Discussion already exists')
+					}
 				})
 				.catch((e) => {
 					console.error(e)
@@ -80,16 +100,21 @@ discussionRouter.post('/:uniId/course/:courseCode/discussion', (req, res) => {
 		})
 })
 
-discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requireModerator('courseCode'), (req, res) => {
+discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requireModerator('courseCode'), (req, res) => {
 	// add check user is admin
 	// add check user is moderator over course
 	// add check user created discussion
 
 	Course.findOne({
 		where: {
-			uniId: req.params.uniId,
 			code: req.params.courseCode
 		},
+		include: [{
+			model: University,
+			where: {
+				slug: req.params.uniSlug
+			}
+		}],
 		attributes: ['id']
 	})
 		.then((result) => {
@@ -121,23 +146,28 @@ discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject', requir
 		})
 })
 
-discussionRouter.patch('/:uniId/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
-	// add check user is admin
+discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
+	// add check user is admin, done
 	// add check user is moderator over course
 	// add check user created discussion
 
 	Course.findOne({
 		where: {
-			uniId: req.params.uniId,
 			code: req.params.courseCode
 		},
+		include: [{
+			model: University,
+			where: {
+				slug: req.params.uniSlug
+			}
+		}],
 		attributes: ['id']
 	})
 		.then((result) => {
 			console.log('id: ' + result?.dataValues.id, 'subject: ' + req.params.subject)
 			DiscussionCourse.update(req.body, {
 				where: {
-					id: result?.dataValues.id,
+					courseId: result?.dataValues.id,
 					slug: req.params.subject
 				}
 			})
@@ -166,8 +196,10 @@ discussionRouter.patch('/:uniId/course/:courseCode/discussion/:subject', require
 // ------------------------------------------------------------
 // ----- /course/discussion/comment -----
 
-discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', (req, res) => {
+discussionRouter.post('/:uniSlug/course/:courseCode/discussion/:subject/comment', (req, res) => {
 	// check user is logged in
+
+	console.log('uniSlug:', req.params.uniSlug, 'code:', req.params.courseCode, 'subject:', req.params.subject)
 
 	const responseTo = req.body.responseTo !== undefined ? req.body.responseTo : null
 
@@ -180,21 +212,29 @@ discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', 
 		include: [{
 			model: Course,
 			where: {
-				uniId: req.params.uniId,
 				code: req.params.courseCode
-			}
+			},
+			include: [{
+				model: University,
+				where: {
+					slug: req.params.uniSlug
+				}
+			}]
 		}],
 		attributes: ['id']
 	})
 		.then((result1) => {
-			DiscussionComment.findAll({
+			DiscussionComment.findOne({
 				where: {
 					discussionCourseId: result1?.dataValues.id
 				},
-				attributes: ['id']
+				order: [
+					['localId', 'DESC']
+				],
+				attributes: ['localId']
 			})
 				.then((result2) => {
-					console.log(result2[0])
+					const numOfComments = result2?.dataValues.localId !== undefined ? result2?.dataValues.localId + 1 : 0
 					DiscussionComment.findOne({
 						where: {
 							localId: responseTo,
@@ -203,7 +243,7 @@ discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', 
 					})
 						.then((result3) => {
 							DiscussionComment?.create({
-								localId: result2.length,
+								localId: numOfComments,
 								discussionCourseId: result1?.dataValues.id,
 								userId: uId,
 								commentText: req.body.commentText,
@@ -239,7 +279,7 @@ discussionRouter.post('/:uniId/course/:courseCode/discussion/:subject/comment', 
 })
 
 // get one comment
-discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject/comment/:localCommentId', (req, res) => {
+discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', (req, res) => {
 	DiscussionComment.findOne({
 		where: {
 			localId: req.params.localCommentId
@@ -253,10 +293,16 @@ discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject/comment/:lo
 			include: [{
 				model: Course,
 				where: {
-					uniId: req.params.uniId,
 					code: req.params.courseCode
 				},
-				attributes: ['name', 'code']
+				attributes: ['name', 'code'],
+				include: [{
+					model: University,
+					where: {
+						slug: req.params.uniSlug
+					},
+					attributes: ['name', 'country', 'city']
+				}]
 			}]
 		}, {
 			model: User,
@@ -281,7 +327,7 @@ discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject/comment/:lo
 })
 
 // get all comments
-discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject/comment', (req, res) => {
+discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject/comment', (req, res) => {
 	DiscussionComment.findAll({
 		include: [{
 			model: DiscussionCourse,
@@ -292,16 +338,22 @@ discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject/comment', (
 			include: [{
 				model: Course,
 				where: {
-					uniId: req.params.uniId,
 					code: req.params.courseCode
 				},
-				attributes: ['name', 'code']
+				attributes: ['name', 'code'],
+				include: [{
+					model: University,
+					where: {
+						slug: req.params.uniSlug
+					},
+					attributes: ['name', 'country', 'city']
+				}]
 			}]
 		}],
 		attributes: ['id', 'commentText', 'responseTo']
 	})
 		.then((found) => {
-			if (found !== null) {
+			if (found !== null && found.length !== 0) {
 				res.status(200)
 				res.send(found)
 			} else {
@@ -316,7 +368,7 @@ discussionRouter.get('/:uniId/course/:courseCode/discussion/:subject/comment', (
 		})
 })
 
-discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject/comment/:localCommentId', requireAdmin(), (req, res) => {
+discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', requireAdmin(), (req, res) => {
 	// add check user is admin, done
 	// add check user is moderator over course
 	// add check user created discussion
@@ -333,9 +385,15 @@ discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject/comment/
 			include: [{
 				model: Course,
 				where: {
-					uniId: req.params.uniId,
 					code: req.params.courseCode
-				}
+				},
+				include: [{
+					model: University,
+					where: {
+						slug: req.params.uniSlug
+					},
+					attributes: ['name', 'country', 'city']
+				}]
 			}]
 		}],
 		attributes: ['id']
@@ -364,14 +422,13 @@ discussionRouter.delete('/:uniId/course/:courseCode/discussion/:subject/comment/
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to get all comments for discussion')
+			res.send('Failed to get the comment from discussion')
 		})
 })
 
-discussionRouter.patch('/:uniId/course/:courseCode/discussion/:subject/comment/:localCommentId', requireAdmin(), (req, res) => {
+discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', requireAdmin(), (req, res) => {
 	// add check user is admin, done
-	// add check user is moderator over course
-	// add check user created discussion
+	// add check user created comment
 
 	DiscussionComment.findOne({
 		where: {
@@ -385,9 +442,15 @@ discussionRouter.patch('/:uniId/course/:courseCode/discussion/:subject/comment/:
 			include: [{
 				model: Course,
 				where: {
-					uniId: req.params.uniId,
 					code: req.params.courseCode
-				}
+				},
+				include: [{
+					model: University,
+					where: {
+						slug: req.params.uniSlug
+					},
+					attributes: ['name', 'country', 'city']
+				}]
 			}]
 		}],
 		attributes: ['id']
