@@ -5,18 +5,18 @@ import { requireAdmin } from '../../utils/auth_utils'
 const adminRouter = express.Router()
 
 // get info about one specific admin user
-adminRouter.get('/:uId/admin/', requireAdmin(), (req, res) => {
+adminRouter.get('/:username/admin/', requireAdmin(), (req, res) => {
 	// add check user is admin
 
 	Admin.findOne({
 		include: {
 			model: User,
+			where: {
+				username: req.params.username
+			},
 			attributes: {
 				exclude: ['password', 'userType']
 			}
-		},
-		where: {
-			userId: req.params.uId
 		}
 	})
 		.then((found: any) => {
@@ -64,40 +64,35 @@ adminRouter.get('/admin/', requireAdmin(), (req, res) => {
 		})
 })
 
-adminRouter.post('/:uId/admin/', (req, res) => {
+adminRouter.post('/:username/admin/', requireAdmin(), (req, res) => {
 	// add check user is admin
 
-	Admin.findOrCreate({
+	User.findOne({
 		where: {
-			userId: req.params.uId
-		}
-	})
-		.then(([user, created]) => {
-			if (created) {
-				res.status(201)
-				res.send('User has been promoted to admin status')
-			} else {
-				res.status(200)
-				res.send('User was already of admin status \n')
-			}
-		})
-		.catch((e) => {
-			console.error(e)
-			res.status(500)
-			res.send('Failed to get create admin user')
-		})
-})
-
-adminRouter.delete('/:uId/admin/', (req, res) => {
-	Admin.destroy({
-		where: {
-			userId: req.params.uId
+			username: req.params.username
 		}
 	})
 		.then((result) => {
-			if (result === 1) {
-				res.status(200)
-				res.send('User is no longer an admin')
+			if (result !== null) {
+				Admin.findOrCreate({
+					where: {
+						userId: result.dataValues.id
+					}
+				})
+					.then(([user, created]) => {
+						if (created) {
+							res.status(201)
+							res.send('User has been promoted to admin status')
+						} else {
+							res.status(200)
+							res.send('User was already of admin status')
+						}
+					})
+					.catch((e) => {
+						console.error(e)
+						res.status(500)
+						res.send('Failed to get create admin user')
+					})
 			} else {
 				res.status(404)
 				res.send('User could not be found')
@@ -106,7 +101,46 @@ adminRouter.delete('/:uId/admin/', (req, res) => {
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to remove users admin privileges')
+			res.send('Failed to get user')
+		})
+})
+
+adminRouter.delete('/:username/admin/', requireAdmin(), (req, res) => {
+	User.findOne({
+		where: {
+			username: req.params.username
+		}
+	})
+		.then((result) => {
+			if (result !== null) {
+				Admin.destroy({
+					where: {
+						userId: result?.dataValues.id
+					}
+				})
+					.then((result) => {
+						if (result === 1) {
+							res.status(200)
+							res.send('User is no longer an admin')
+						} else {
+							res.status(404)
+							res.send('User could not be found')
+						}
+					})
+					.catch((e) => {
+						console.error(e)
+						res.status(500)
+						res.send('Failed to remove users admin privileges')
+					})
+			} else {
+				res.status(404)
+				res.send('User could not be found')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get user')
 		})
 })
 
