@@ -4,9 +4,9 @@ import { requireAdmin } from '../utils/auth_utils'
 import slugify from 'slugify'
 
 const universityRouter = express.Router()
-const universityAuthRouter = express.Router()
+// const universityAuthRouter = express.Router()
 
-universityAuthRouter.post('/', requireAdmin(), (req, res) => {
+universityRouter.post('/', requireAdmin(), (req, res) => {
 	// add check for admin status
 
 	University?.findOrCreate({
@@ -70,7 +70,7 @@ universityRouter.get('/', (req, res) => {
 		})
 })
 
-universityAuthRouter.delete('/:uniSlug', requireAdmin(), (req, res) => {
+universityRouter.delete('/:uniSlug', requireAdmin(), (req, res) => {
 	// check if user is admin, done
 
 	University.destroy({
@@ -94,7 +94,7 @@ universityAuthRouter.delete('/:uniSlug', requireAdmin(), (req, res) => {
 		})
 })
 
-universityAuthRouter.patch('/:uniSlug', requireAdmin(), (req, res) => {
+universityRouter.patch('/:uniSlug', requireAdmin(), (req, res) => {
 	// check if user is admin, done
 
 	University.update(req.body, {
@@ -118,4 +118,4 @@ universityAuthRouter.patch('/:uniSlug', requireAdmin(), (req, res) => {
 		})
 })
 
-export default [universityRouter, universityAuthRouter]
+export default universityRouter

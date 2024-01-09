@@ -27,6 +27,9 @@ beforeAll(async () => {
 				server.server.use('/user', (await import('../src/routes/user')).default)
 				server.server.use('/user', (await import('../src/routes/user/admin')).default)
 				server.server.use('/user', (await import('../src/routes/user/banned')).default)
+				server.server.use('/user', (await import('../src/routes/user/moderator')).default)
+				server.server.use('/university', (await import('../src/routes/university.ts')).default)
+				server.server.use('/university', (await import('../src/routes/course.ts')).default)
 				console.log('Database up and running')
 				resolve()
 			}).catch((e) => {
@@ -42,7 +45,6 @@ beforeAll(async () => {
 describe('user tests', () => {
 	test('connect', async () => {
 		const res = await fetch('http://localhost:3000/user', { method: 'GET' })
-		// console.log(res)
 		expect(res.ok).toBe(true)
 	})
 
@@ -57,8 +59,6 @@ describe('user tests', () => {
 		}
 
 		const res = await createUser(userInfo)
-
-		// console.log(res)
 		expect(res.ok).toBe(true)
 	})
 
@@ -80,7 +80,6 @@ describe('user tests', () => {
 		const auth = res.headers.getSetCookie()
 
 		userAuth = auth[0].split(';', 1)[0]
-		// console.log(userAuth)
 
 		expect(res.ok).toBe(true)
 	})
@@ -112,7 +111,6 @@ describe('admin tests', () => {
 
 	test('connect2', async () => {
 		const res = await fetch('http://localhost:3000/user', { method: 'GET' })
-		// console.log(res)
 		expect(res.ok).toBe(true)
 	})
 
@@ -156,8 +154,6 @@ describe('admin tests', () => {
 			}
 		})
 
-		// console.log('status: ' + res.status)
-
 		expect(res.ok).toBe(true)
 	})
 
@@ -170,8 +166,6 @@ describe('admin tests', () => {
 				Cookie: adminAuth
 			}
 		})
-
-		// console.log(await res.json())
 
 		expect(res.ok).toBe(true)
 	})
@@ -370,28 +364,189 @@ describe('banned tests', () => {
 })
 
 describe('moderator tests', () => {
-	test('create moderator', async () => {
-		// Should a moderator be for whole website or specific courses?
+	let moderatorUsername: string
+	let moderatorId: string
 
-		// confirm user is moderator
+	test('create moderator', async () => {
+		// Create a user to make a moderator
+		const userInfo = {
+			username: 'testmoderatoruser',
+			password: 'testmoderator',
+			email: 'emailmoderator@testmail.test',
+			age: 123,
+			firstName: 'TestingModerator',
+			lastName: 'Name'
+		}
+
+		const resBannedUser = await createUser(userInfo)
+
+		const bannedUserInfo = JSON.parse(resBannedUser.headers.get('x-user-data') ?? '{}')
+
+		moderatorId = bannedUserInfo.id
+		moderatorUsername = bannedUserInfo.username
+
+		// Create university
+
+		const university = {
+			name: 'Luleå tekniska universitet',
+			country: 'Sweden',
+			city: 'Luleå'
+		}
+
+		const resPostUni = await fetch('http://localhost:3000/university/', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(university)
+		})
+
+		expect(resPostUni.status).toBe(201)
+
+		// Create course for user to be moderator over
+
+		const course = {
+			name: 'Compiler construction and formal languages',
+			code: 'D7050E'
+		}
+
+		const resPostCourse = await fetch('http://localhost:3000/university/Lulea-tekniska-universitet/course/', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(course)
+		})
+
+		expect(resPostCourse.status).toBe(201)
+
+		// Make user moderator over course
+
+		const newMod = {
+			user: moderatorUsername,
+			university: 'Luleå tekniska universitet',
+			courseCode: 'D7050E'
+		}
+
+		const resMakeMod = await fetch('http://localhost:3000/user/moderator/', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(newMod)
+		})
+
+		expect(resMakeMod.status).toBe(201)
 	})
 
 	test('search for moderator', async () => {
-		// Search for moderator by id
+		// Search for moderator by username
+		const resGetMod = await fetch('http://localhost:3000/user/moderator?user=' + moderatorUsername, {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+
+		const moderator: any = await resGetMod.json()
 
 		// confirm that moderator has been found
+		expect(moderator[0].User.id).toBe(moderatorId)
+		expect(moderator[0].User.username).toBe(moderatorUsername)
 	})
 
 	test('search for all moderator', async () => {
-		// Search for all moderators
+		// Create another moderator
+		const userInfo = {
+			username: 'testmoderator2user',
+			password: 'testmoderator2',
+			email: 'emailmoderator2@testmail.test',
+			age: 123,
+			firstName: 'TestingModerator2',
+			lastName: 'Name'
+		}
 
-		// confirm that information has been received
+		const resBannedUser = await createUser(userInfo)
+
+		const bannedUserInfo = JSON.parse(resBannedUser.headers.get('x-user-data') ?? '{}')
+
+		const moderatorId2 = bannedUserInfo.id
+		const moderatorUsername2 = bannedUserInfo.username
+
+		const newMod = {
+			user: moderatorUsername2,
+			university: 'Luleå tekniska universitet',
+			courseCode: 'D7050E'
+		}
+
+		const resMakeMod = await fetch('http://localhost:3000/user/moderator/', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(newMod)
+		})
+
+		expect(resMakeMod.status).toBe(201)
+
+		// Search for all moderators
+		const resGetMod = await fetch('http://localhost:3000/user/moderator', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+
+		const moderators: any = await resGetMod.json()
+
+		// confirm that moderator has been found
+		expect(moderators[0].User.id).toBe(moderatorId)
+		expect(moderators[0].User.username).toBe(moderatorUsername)
+		expect(moderators[1].User.id).toBe(moderatorId2)
+		expect(moderators[1].User.username).toBe(moderatorUsername2)
 	})
 
 	test('remove moderator privileges', async () => {
 		// Remove moderator privileges for user
+		const resRemoveMod = await fetch('http://127.0.0.1:3000/user/' + moderatorUsername + '/moderator', {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+
+		expect(resRemoveMod.status).toBe(200)
+		const confirmation = await resRemoveMod.text()
+		expect(confirmation).toBe('User is no longer a moderator over course(s)')
 
 		// confirm that moderator privileges have been removed
+		const resGetMod = await fetch('http://localhost:3000/user/moderator?user=' + moderatorUsername, {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+
+		// confirm that moderator has been found
+		const confirmation2 = await resGetMod.text()
+		expect(resGetMod.status).toBe(404)
+		expect(confirmation2).toBe('No records could be found for the given parameters')
 	})
 })
 

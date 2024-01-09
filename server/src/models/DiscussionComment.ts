@@ -4,14 +4,13 @@ import DiscussionCourse from '../models/DiscussionCourse.ts'
 import User from '../models/User.ts'
 
 const DiscussionComment = getServer().db.define('DiscussionComment', {
-
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
 		allowNull: false,
 		autoIncrement: true
 	},
-	localId: { // given to comments in a discussion, the first comment will have localId = 1
+	localId: { // given to comments in a discussion, the first comment will have localId = 0
 		type: DataTypes.INTEGER,
 		allowNull: false
 	},
@@ -57,8 +56,8 @@ DiscussionComment.hasMany(DiscussionComment, {
 	as: 'replies'
 })
 
-DiscussionComment.sync()
+/* DiscussionComment.sync()
 	.then(() => { console.log('Created DiscussionComment table') })
-	.catch(() => { console.error('Failed to create DiscussionComment table') })
+	.catch(() => { console.error('Failed to create DiscussionComment table') }) */
 
 export default DiscussionComment

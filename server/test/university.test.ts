@@ -73,7 +73,7 @@ describe('university tests', () => {
 	test('register new universities', async () => {
 		// create two universities
 
-		// make sure university has been created
+		// make sure universities have been created
 	})
 
 	test('search for university', () => {
