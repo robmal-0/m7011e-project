@@ -14,15 +14,16 @@ const Moderator = getServer().db.define('Moderator', {
 	}
 })
 
-User.hasMany(Moderator, {
+User.belongsToMany(Course, {
+	through: Moderator,
 	foreignKey: 'userId'
 })
-Course.hasMany(Moderator, {
+Moderator.belongsTo(User, { foreignKey: 'userId' })
+Course.belongsToMany(User, {
+	through: Moderator,
 	foreignKey: 'courseId'
 })
-Moderator.belongsTo(User, {
-	foreignKey: 'userId'
-})
+Moderator.belongsTo(Course, { foreignKey: 'courseId' })
 
 export interface ModeratorType {
 	userId: number

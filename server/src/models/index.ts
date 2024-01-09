@@ -14,7 +14,7 @@ import type { ModelStatic, Model } from 'sequelize'
 async function syncTable (table: ModelStatic<Model>): Promise<void> {
 	await table.sync()
 		.then(() => { console.log(`Created table ${table.name}`) })
-		.catch(() => { console.error(`Failed to create table ${table.name}`) })
+		.catch((e) => { console.error(`Failed to create table ${table.name} ${e}`) })
 }
 
 async function syncAll (): Promise<void> {
