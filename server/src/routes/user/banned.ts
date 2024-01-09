@@ -1,7 +1,6 @@
 import express from 'express'
-import BannedUser from '../../models/BannedUser'
+import { BannedUser, User } from '../../models'
 import { requireAdmin } from '../../utils/auth_utils'
-import User from '../../models/User'
 
 const banRouter = express.Router()
 

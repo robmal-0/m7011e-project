@@ -1,8 +1,6 @@
 import express from 'express'
-import Moderator from '../../models/Moderator'
-import User from '../../models/User'
+import { Moderator, User, Course, University } from '../../models'
 import { requireAdmin } from '../../utils/auth_utils'
-import { Course, University } from '../../models'
 
 const modRouter = express.Router()
 

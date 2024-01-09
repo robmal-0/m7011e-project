@@ -1,8 +1,6 @@
 import express from 'express'
-import RatingCourse from '../../models/RatingCourse'
 import jwt from 'jsonwebtoken'
-import Course from '../../models/Course'
-import { University, User } from '../../models'
+import { University, User, Course, RatingCourse } from '../../models'
 import { type Model } from 'sequelize'
 
 const ratingRouter = express.Router()

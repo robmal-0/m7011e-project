@@ -29,7 +29,8 @@ University.hasMany(Course, {
 	foreignKey: 'uniId'
 })
 Course.belongsTo(University, {
-	foreignKey: 'uniId'
+	foreignKey: 'uniId',
+	onDelete: 'CASCADE'
 })
 
 /* export interface CourseType {

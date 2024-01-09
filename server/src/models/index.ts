@@ -17,7 +17,7 @@ async function syncTable (table: ModelStatic<Model>): Promise<void> {
 		.catch((e) => { console.error(`Failed to create table ${table.name}`, e) })
 }
 
-async function syncAll (): Promise<void> {
+export async function syncAll (): Promise<void> {
 	await syncTable(User)
 	await syncTable(University)
 	await syncTable(Admin)

@@ -1,10 +1,7 @@
 import express from 'express'
-import CourseParticipation from '../../models/CourseParticipation'
 import jwt from 'jsonwebtoken'
 import { requireLogin } from '../../utils/auth_utils'
-import Course from '../../models/Course'
-import User from '../../models/User'
-import { University } from '../../models'
+import { University, CourseParticipation, Course, User } from '../../models'
 
 const participationRouter = express.Router()
 

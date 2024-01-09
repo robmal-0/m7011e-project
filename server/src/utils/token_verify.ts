@@ -1,4 +1,4 @@
-import Admin from '../models/Admin'
+import { Admin } from '../models'
 import jwt from 'jsonwebtoken'
 import { type Response } from 'express'
 import cookie from 'cookie'

@@ -1,5 +1,5 @@
 import express from 'express'
-import University from '../models/University'
+import { University } from '../models'
 import { requireAdmin } from '../utils/auth_utils'
 import slugify from 'slugify'
 

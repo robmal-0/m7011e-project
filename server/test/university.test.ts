@@ -25,6 +25,7 @@ beforeAll(async () => {
 			port = server.port
 			console.log(`Test server running at port ${port}`)
 			server.db.authenticate().then(async () => {
+				await resetDatabase(server.db)
 				server.server.use('/user', (await import('../src/routes/user')).default)
 				server.server.use('/user', (await import('../src/routes/user/admin')).default)
 				server.server.use('/university', (await import('../src/routes/university')).default)
@@ -112,7 +113,8 @@ async function resetDatabase (db: Sequelize): Promise<any> {
 		await db.drop()
 
 		// Recreate the tables
-		await db.sync({ force: true })
+		const syncAll = (await import('../src/models')).syncAll
+		await syncAll()
 
 		console.log('--------------------------------------')
 		console.log('Database reset successfully.')

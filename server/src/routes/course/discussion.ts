@@ -1,12 +1,8 @@
 import express from 'express'
 import slugify from 'slugify'
 import jwt from 'jsonwebtoken'
-import Course from '../../models/Course'
-import DiscussionCourse from '../../models/DiscussionCourse'
-import DiscussionComment from '../../models/DiscussionComment'
 import { requireAdmin, requireModerator } from '../../utils/auth_utils'
-import User from '../../models/User'
-import { University } from '../../models'
+import { University, User, DiscussionComment, DiscussionCourse, Course } from '../../models'
 
 const discussionRouter = express.Router()
 

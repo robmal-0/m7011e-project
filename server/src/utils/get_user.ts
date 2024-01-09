@@ -1,7 +1,5 @@
 import _ from 'lodash'
-import User, { type UserType } from '../models/User'
-import Admin from '../models/Admin'
-import Moderator from '../models/Moderator'
+import { User, Admin, Moderator, type UserType } from '../models'
 
 export enum Privileges {
 	USER = 0,
