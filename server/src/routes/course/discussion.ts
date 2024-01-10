@@ -1,8 +1,10 @@
 import express from 'express'
 import slugify from 'slugify'
 import jwt from 'jsonwebtoken'
-import { requireAdmin, requireModerator } from '../../utils/auth_utils'
+import { getUser, requireAdmin, requireLogin, requireModerator } from '../../utils/auth_utils'
 import { University, User, DiscussionComment, DiscussionCourse, Course } from '../../models'
+import { Op } from 'sequelize'
+import { Privileges } from '../../utils/get_user'
 
 const discussionRouter = express.Router()
 
@@ -84,7 +86,43 @@ discussionRouter.get('/:uniSlug/course/:courseCode/discussion/', (req, res) => {
 		})
 })
 
-discussionRouter.post('/:uniSlug/course/:courseCode/discussion', (req, res) => {
+// get all discussions
+discussionRouter.get('/:uniSlug/course/:courseCode/discussion/', (req, res) => {
+	DiscussionCourse.findAll({
+		attributes: ['subject', 'description', 'slug'],
+		include: [{
+			model: Course,
+			attributes: ['code'],
+			where: {
+				code: req.params.courseCode
+			},
+			required: true,
+			include: [{
+				model: University,
+				where: {
+					slug: req.params.uniSlug
+				},
+				attributes: ['name', 'country', 'city']
+			}]
+		}]
+	})
+		.then((found) => {
+			if (found !== null) {
+				res.status(200)
+				res.send(found)
+			} else {
+				res.status(404)
+				res.send('Could not find discussion about course')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get information about discussion')
+		})
+})
+
+discussionRouter.post('/:uniSlug/course/:courseCode/discussion', requireLogin(), (req, res) => {
 	// make sure user is logged in
 
 	const uId = (jwt.verify(req.cookies.auth_token, process.env.SECRET_KEY as string) as unknown as claims).id
@@ -151,10 +189,25 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requ
 		attributes: ['id']
 	})
 		.then((result) => {
-			DiscussionCourse.destroy({
-				where: {
+			const user = getUser(res)
+			const cond: any[] = [
+				{
+					slug: req.params.subject,
+					courseId: result?.dataValues.id,
+					userId: user.user.id
+				}
+			]
+
+			if (user.privileges >= Privileges.ADMIN) {
+				cond.push({
 					slug: req.params.subject,
 					courseId: result?.dataValues.id
+				})
+			}
+
+			DiscussionCourse.destroy({
+				where: {
+					[Op.or]: cond
 				}
 			})
 				.then((result) => {
@@ -228,8 +281,8 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requi
 // ------------------------------------------------------------
 // ----- /course/discussion/comment -----
 
-discussionRouter.post('/:uniSlug/course/:courseCode/discussion/:subject/comment', (req, res) => {
-	// check user is logged in
+discussionRouter.post('/:uniSlug/course/:courseCode/discussion/:subject/comment', requireLogin(), (req, res) => {
+	// check user is logged in, done
 
 	// console.log('uniSlug:', req.params.uniSlug, 'code:', req.params.courseCode, 'subject:', req.params.subject)
 
