@@ -14,9 +14,6 @@ export function requireLogin (options?: Options): RequestHandler {
 				if (result === undefined) {
 					throw new Error('User not found')
 				}
-				if (result.bannedTill !== undefined && Number(result.bannedTill) > Number(new Date())) {
-					throw new Error('User is banned')
-				}
 				if (options?.setToken === undefined || options.setToken) setCookieHeader(res, result)
 				res.setHeader('X-User-Data', JSON.stringify(result.user))
 				res.setHeader('X-User-Privilege', JSON.stringify(result.privileges))

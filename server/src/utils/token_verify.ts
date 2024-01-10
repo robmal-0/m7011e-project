@@ -10,6 +10,10 @@ export async function verifyToken (token: string): Promise<UserResult | undefine
 
 		const user = await getUser('id', claims.id)
 
+		if (user?.bannedTill !== undefined && Number(user.bannedTill) > Number(new Date())) {
+			throw new Error('User is banned')
+		}
+
 		return user
 	} catch (e) {
 		return undefined

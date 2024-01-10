@@ -52,6 +52,7 @@ userRouter.post('/login', (req, res) => {
 			if (result.bannedTill !== undefined && Number(result.bannedTill) > Number(new Date())) {
 				res.status(403)
 				res.send('User has been banned')
+				return
 			}
 			const verified: boolean = await bcrypt.compare(req.body.password, result.user.password)
 			if (verified) {
