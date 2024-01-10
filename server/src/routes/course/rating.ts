@@ -147,7 +147,6 @@ ratingRouter.delete('/:uniSlug/course/:courseCode/rating', (req, res) => {
 
 	findRating(whereClause, req.params.courseCode, req.params.uniSlug)
 		.then((result: Model<any, any> | null) => {
-			console.log(result?.dataValues)
 			RatingCourse.destroy({
 				where: {
 					userId: result?.dataValues.User.id,
@@ -212,7 +211,6 @@ ratingRouter.get('/:uniSlug/course/:courseCode/rating', (req, res) => {
 		attributes: ['stars']
 	})
 		.then((result) => {
-			console.log(result.length)
 			if (result !== undefined && result.length !== 0) {
 				res.status(200)
 				res.send(result)

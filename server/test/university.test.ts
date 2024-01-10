@@ -31,6 +31,8 @@ beforeAll(async () => {
 				server.server.use('/university', (await import('../src/routes/university')).default)
 				server.server.use('/university', (await import('../src/routes/course.ts')).default)
 				server.server.use('/university', (await import('../src/routes/course/discussion.ts')).default)
+				server.server.use('/university', (await import('../src/routes/course/participation.ts')).default)
+				server.server.use('/university', (await import('../src/routes/course/rating.ts')).default)
 				console.log('Database up and running')
 				resolve()
 			}).catch((e) => {
@@ -439,7 +441,7 @@ describe('discussion tests', () => {
 		expect(discussions[1].subject).toBe('What are some good ORMs in NodeJS?')
 	})
 
-	test('search for discussion course of course', async () => {
+	test('search for discussion of course', async () => {
 		// search for discussion
 		const resGetDiscussion = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website', {
 			method: 'GET',
@@ -521,6 +523,10 @@ describe('discussion tests', () => {
 		expect(discussion.subject).toBe('How do you build a website?')
 	})
 
+	let localId1: number
+	let localId2: number
+	let realId2: number
+
 	test('post comments on discussion', async () => {
 		// create new comments
 		const commentInfo1 = {
@@ -565,25 +571,334 @@ describe('discussion tests', () => {
 		})
 		const comments: any = await resGetComment.json()
 
-		expect(resGetComment.status).toBe(200)
-		console.log('COMMENTS:', comments)
+		realId2 = comments[1].id
+		localId1 = comments[0].localId
+		localId2 = comments[1].localId
 
-		/* expect(discussions[0].subject).toBe('How do you build a website?')
-		expect(discussions[1].subject).toBe('What are some good ORMs in NodeJS?') */
+		expect(resGetComment.status).toBe(200)
+		expect(comments[0].commentText).toBe('Still have no figured it out')
+		expect(comments[1].commentText).toBe('I figured it out')
 	})
 
-	test('search for comment', async () => {})
+	test('search for comment on discussion', async () => {
+		// search for comment
+		const resGetComment = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment/' + localId1, {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const comment: any = await resGetComment.json()
 
-	test('respond to comment', async () => {})
+		expect(resGetComment.status).toBe(200)
+		expect(comment.commentText).toBe('Still have no figured it out')
+		expect(comment.User.username).toBe('testadmin')
+	})
 
-	test('delete comment', async () => {})
+	test('respond to comment', async () => {
+		// package
+		const commentInfo = {
+			commentText: 'What did you do?',
+			responseTo: localId2
+		}
 
-	test('patch comment', async () => {})
+		// respond to second comment
+		const resPostComment = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(commentInfo)
+		})
+		expect(resPostComment.status).toBe(201)
+
+		// check if response has been registered
+		const resGetComment = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment/' + (localId2 + 1), {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const comment: any = await resGetComment.json()
+
+		expect(resGetComment.status).toBe(200)
+		expect(comment.responseTo).toBe(realId2)
+	})
+
+	test('delete comment', async () => {
+		// delete the first comment
+		const resDeleteComment = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment/' + localId1, {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const deletedComment: any = await resDeleteComment.text()
+
+		expect(resDeleteComment.status).toBe(200)
+		expect(deletedComment).toBe('The comment has been removed')
+
+		// check that the comment is deleted
+		const resGetDeleted = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment/' + localId1, {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const noComment: any = await resGetDeleted.text()
+
+		expect(resGetDeleted.status).toBe(404)
+		expect(noComment).toBe('Could not find comment for the discussion')
+	})
+
+	test('patch comment', async () => {
+		// patch comment
+		const newText = {
+			commentText: 'I figured it out. Here is what I did ....'
+		}
+
+		const resPatchComment = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment/' + localId2, {
+			method: 'PATCH',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(newText)
+		})
+
+		expect(resPatchComment.status).toBe(200)
+
+		// check that the comment text has been changed
+		const resGetComment = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/discussion/How-do-you-build-a-website/comment/' + localId2, {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const comment: any = await resGetComment.json()
+
+		expect(resGetComment.status).toBe(200)
+
+		expect(comment.commentText).toBe('I figured it out. Here is what I did ....')
+		expect(comment.commentText).not.toBe('I figured it out')
+	})
 })
 
-describe('participation tests', () => {})
+describe('participation tests', () => {
+	test('register for course and search for it', async () => {
+		// create new participation info
+		const participationInfo = {
+			courseStart: '2023-10-30',
+			courseEnd: '2024-01-14'
+		}
 
-describe('rating tests', () => {})
+		// post information
+		const resPostPart = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/participation', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(participationInfo)
+		})
+		expect(resPostPart.status).toBe(201)
+
+		// check that the participation has been saved
+		const resGetPart = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/participation?user=testadmin', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const participation: any = await resGetPart.json()
+
+		expect(resGetPart.status).toBe(200)
+		expect(participation[0].courseStart).toBe('2023-10-30')
+		expect(participation[0].courseEnd).toBe('2024-01-14')
+		expect(participation[0].User.username).toBe('testadmin')
+	})
+
+	test('patch course participation', async () => {
+		// patch participation dates
+		const participationInfo = {
+			courseStart: '2023-10-28',
+			courseEnd: '2024-01-14'
+		}
+
+		const resPatchPart = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/participation/testadmin', {
+			method: 'PATCH',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(participationInfo)
+		})
+
+		expect(resPatchPart.status).toBe(200)
+
+		// check that the participation dates have been changed
+		const resGetPart = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/participation?user=testadmin', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		expect(resGetPart.status).toBe(200)
+		const part: any = await resGetPart.json()
+
+		expect(part[0].courseStart).toBe('2023-10-28')
+		expect(part[0].courseEnd).toBe('2024-01-14')
+	})
+
+	test('delete course participation', async () => {
+		// delete course participation
+		const resDeletePart = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/participation/testadmin', {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const deletedPart: any = await resDeletePart.text()
+
+		expect(resDeletePart.status).toBe(200)
+		expect(deletedPart).toBe('User was removed from course')
+
+		// check that the participation is deleted
+		const resGetDeleted = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/participation?user=testadmin', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const noPart: any = await resGetDeleted.text()
+
+		expect(resGetDeleted.status).toBe(404)
+		expect(noPart).toBe('User(s) could not be found')
+	})
+})
+
+describe('rating tests', () => {
+	test('register rating for course and search for that rating', async () => {
+		// create new rating
+		const ratingInfo = {
+			stars: 4
+		}
+
+		// post information
+		const resPostRating = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/rating', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(ratingInfo)
+		})
+		expect(resPostRating.status).toBe(201)
+
+		// check that the rating has been saved
+		const resGetRating = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/rating?user=testadmin', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const rating: any = await resGetRating.json()
+
+		expect(resGetRating.status).toBe(200)
+		expect(rating[0].stars).toBe(4)
+		expect(rating[0].User.username).toBe('testadmin')
+	})
+
+	test('patch rating', async () => {
+		// patch rating
+		const ratingInfo = {
+			stars: 5
+		}
+
+		const resPatchRating = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/rating', {
+			method: 'PATCH',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			},
+			body: JSON.stringify(ratingInfo)
+		})
+
+		expect(resPatchRating.status).toBe(200)
+
+		// check that the rating has been changed
+		const resGetRating = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/rating?user=testadmin', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		expect(resGetRating.status).toBe(200)
+		const rating: any = await resGetRating.json()
+
+		expect(rating[0].stars).toBe(5)
+		expect(rating[0].User.username).toBe('testadmin')
+	})
+
+	test('remove rating', async () => {
+		// delete rating
+		const resDeleteRating = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/Rating', {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const deletedRating: any = await resDeleteRating.text()
+
+		expect(resDeleteRating.status).toBe(200)
+		expect(deletedRating).toBe('Rating was removed')
+
+		// check that the rating is deleted
+		const resGetDeleted = await fetch('http://localhost:3000/university/Lulea-universitet/course/M7011E/Rating?user=testadmin', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: adminAuth
+			}
+		})
+		const noRating: any = await resGetDeleted.text()
+
+		expect(resGetDeleted.status).toBe(404)
+		expect(noRating).toBe('Rating(s) could not be found')
+	})
+})
 
 afterAll(async () => {
 	const db = getServer().db

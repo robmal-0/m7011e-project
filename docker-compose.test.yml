@@ -28,4 +28,4 @@ services:
       - '3000:3000'
     environment:
       SECRET_KEY: 'superSecretKey'
-    command: 'bun test university'
+    command: 'bun test'

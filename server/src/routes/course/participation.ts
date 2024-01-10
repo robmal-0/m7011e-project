@@ -198,7 +198,8 @@ participationRouter.get('/:uniSlug/course/:courseCode/participation/', (req, res
 			model: User,
 			attributes: ['id', 'username'],
 			where: whereClause
-		}]
+		}],
+		attributes: ['courseStart', 'courseEnd']
 	})
 		.then((result) => {
 			if (result !== undefined && result.length !== 0) {

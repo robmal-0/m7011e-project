@@ -393,7 +393,7 @@ discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject/comment/:
 			model: User,
 			attributes: ['username']
 		}],
-		attributes: ['id', 'commentText', 'responseTo']
+		attributes: ['id', 'localId', 'commentText', 'responseTo']
 	})
 		.then((found) => {
 			if (found !== null) {
@@ -401,7 +401,7 @@ discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject/comment/:
 				res.send(found)
 			} else {
 				res.status(404)
-				res.send('Could not find comments for the discussion')
+				res.send('Could not find comment for the discussion')
 			}
 		})
 		.catch((e) => {
@@ -435,7 +435,7 @@ discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject/comment',
 				}]
 			}]
 		}],
-		attributes: ['id', 'commentText', 'responseTo']
+		attributes: ['id', 'localId', 'commentText', 'responseTo']
 	})
 		.then((found) => {
 			if (found !== null && found.length !== 0) {
