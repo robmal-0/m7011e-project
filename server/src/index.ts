@@ -15,14 +15,16 @@ import { getServer } from './Server'
 
 const server = getServer()
 
-server.server.use('/user', user)
-server.server.use('/user', admin)
-server.server.use('/user', moderator)
-server.server.use('/user', banned)
-server.server.use('/university', university)
-server.server.use('/university', course)
-server.server.use('/university', participation)
-server.server.use('/university', discussion)
-server.server.use('/university', rating)
+const apiVersion = '/v1'
+
+server.server.use(apiVersion + '/user', user)
+server.server.use(apiVersion + '/user', admin)
+server.server.use(apiVersion + '/user', moderator)
+server.server.use(apiVersion + '/user', banned)
+server.server.use(apiVersion + '/university', university)
+server.server.use(apiVersion + '/university', course)
+server.server.use(apiVersion + '/university', participation)
+server.server.use(apiVersion + '/university', discussion)
+server.server.use(apiVersion + '/university', rating)
 
 console.log(`Server listening at port ${server.port}`)
