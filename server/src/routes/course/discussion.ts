@@ -160,7 +160,6 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requi
 		attributes: ['id']
 	})
 		.then((result) => {
-			console.log('id: ' + result?.dataValues.id, 'subject: ' + req.params.subject)
 			DiscussionCourse.update(req.body, {
 				where: {
 					courseId: result?.dataValues.id,

@@ -5,7 +5,7 @@ import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import { setCookieHeader } from '../utils/token_verify'
 import { getUser } from '../utils/get_user'
-import { requireLogin } from '../utils/auth_utils'
+import { requireAdmin, requireLogin } from '../utils/auth_utils'
 
 const userRouter = express.Router()
 
@@ -101,21 +101,93 @@ userRouter.delete('/', (req, res) => {
 userRouter.get('/', (req, res) => {
 	// maybe add check for logged in?
 
+	let whereCond
+
+	if (req.query.username !== undefined) {
+		whereCond = { username: req.query.username }
+	} else {
+		whereCond = {}
+	}
+
 	User.findAll({
+		where: whereCond,
+		attributes: ['id', 'username']
 	})
 		.then((found) => {
-			if (found !== null) {
+			if (found !== null && found.length !== 0) {
 				res.status(200)
 				res.send(found)
 			} else {
 				res.status(404)
-				res.send('Could not find requested record')
+				res.send('Could not find records')
 			}
 		})
 		.catch((e) => {
 			console.error(e)
 			res.status(500)
-			res.send('Failed to find course')
+			res.send('Failed to get users')
+		})
+})
+
+userRouter.patch('/:username', requireAdmin(), (req, res) => {
+	// add check if user is admin, done
+	// add check if user is user
+
+	const hashPass = req.body.password !== undefined
+		? bcrypt.hashSync(req.body.password, 10)
+		: undefined
+
+	User.update({
+		username: req.body.username,
+		email: req.body.email,
+		password: hashPass,
+		age: req.body.age,
+		firstName: req.body.firstName,
+		lastName: req.body.lastName
+	}, {
+		where: {
+			username: req.params.username
+		}
+	})
+		.then((saved) => {
+			console.log(saved[0])
+			if (saved[0] !== 0) {
+				res.status(200)
+				res.send('User information has been updated')
+			} else {
+				res.status(404)
+				res.send('Could not find user')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get user')
+		})
+})
+
+userRouter.delete('/:username', requireAdmin(), (req, res) => {
+	// add check if user is admin, done
+	// add check if user is user
+
+	User.destroy({
+		where: {
+			username: req.params.username
+		}
+	})
+		.then((found) => {
+			if (found !== 0) {
+				res.status(200)
+				res.send('User has been deleted')
+			} else {
+				res.status(404)
+				res.send('Could not find user')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get user')
 		})
 })
 

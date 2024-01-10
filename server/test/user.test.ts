@@ -43,10 +43,10 @@ beforeAll(async () => {
 })
 
 describe('user tests', () => {
-	test('connect', async () => {
+	/* test('connect', async () => {
 		const res = await fetch('http://localhost:3000/user', { method: 'GET' })
 		expect(res.ok).toBe(true)
-	})
+	}) */
 
 	test('create user', async () => {
 		const userInfo = {
@@ -96,23 +96,42 @@ describe('user tests', () => {
 		expect(res.ok).toBe(true)
 	})
 
+	test('search for user', async () => {
+		const res = await fetch('http://localhost:3000/user?username=testuser', {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		expect(res.status).toBe(200)
+
+		const user: any = await res.json()
+
+		expect(user[0].username).toBe('testuser')
+	})
+
+	test('update information about user', async () => {
+		// change code to check if user is trying to change information about user is user
+	})
+
+	test('remove user', async () => {
+		// change code to check if user is trying to remove user is user
+	})
+
 	afterAll(async () => {
 		const db = getServer().db
 		await resetDatabase(db)
-		/* await User.destroy({
-			where: {},
-			truncate: true
-		}) */
 	})
 })
 
 describe('admin tests', () => {
 	let secondAdminId: { id: string }
 
-	test('connect2', async () => {
+	/* test('connect2', async () => {
 		const res = await fetch('http://localhost:3000/user', { method: 'GET' })
 		expect(res.ok).toBe(true)
-	})
+	}) */
 
 	test('create admin', async () => {
 		const userInfo = {

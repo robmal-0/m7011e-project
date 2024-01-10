@@ -55,12 +55,12 @@ universityRouter.get('/', (req, res) => {
 
 	University.findAll(options)
 		.then((found) => {
-			if (found !== null) {
-				res.status(201)
+			if (found !== null && found.length !== 0) {
+				res.status(200)
 				res.send(found)
 			} else {
-				res.status(200)
-				res.send('No universities could be found')
+				res.status(404)
+				res.send('No university could be found')
 			}
 		})
 		.catch((e) => {
@@ -97,7 +97,16 @@ universityRouter.delete('/:uniSlug', requireAdmin(), (req, res) => {
 universityRouter.patch('/:uniSlug', requireAdmin(), (req, res) => {
 	// check if user is admin, done
 
-	University.update(req.body, {
+	const newSlug = req.body.name !== undefined
+		? slugify(req.body.name)
+		: undefined
+
+	University.update({
+		name: req.body.name,
+		slug: newSlug,
+		country: req.body.country,
+		city: req.body.city
+	}, {
 		where: {
 			slug: req.params.uniSlug
 		}
