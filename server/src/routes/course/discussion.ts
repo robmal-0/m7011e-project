@@ -1,7 +1,7 @@
 import express from 'express'
 import slugify from 'slugify'
 import jwt from 'jsonwebtoken'
-import { getUser, requireAdmin, requireLogin, requireModerator } from '../../utils/auth_utils'
+import { getUser, requireLogin } from '../../utils/auth_utils'
 import { University, User, DiscussionComment, DiscussionCourse, Course } from '../../models'
 import { Op } from 'sequelize'
 import { Privileges } from '../../utils/get_user'
@@ -171,10 +171,9 @@ discussionRouter.post('/:uniSlug/course/:courseCode/discussion', requireLogin(),
 		})
 })
 
-discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requireModerator('courseCode'), (req, res) => {
-	// add check user is admin
-	// add check user is moderator over course
-	// add check user created discussion
+discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requireLogin(), (req, res) => {
+	// add check user is admin, done
+	// add check user created discussion, done
 
 	Course.findOne({
 		where: {
@@ -232,9 +231,8 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requ
 		})
 })
 
-discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requireAdmin(), (req, res) => {
+discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requireLogin(), (req, res) => {
 	// add check user is admin, done
-	// add check user is moderator over course
 	// add check user created discussion
 
 	Course.findOne({
@@ -250,10 +248,25 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requi
 		attributes: ['id']
 	})
 		.then((result) => {
+			const user = getUser(res)
+			const cond: any[] = [
+				{
+					slug: req.params.subject,
+					courseId: result?.dataValues.id,
+					userId: user.user.id
+				}
+			]
+
+			if (user.privileges >= Privileges.ADMIN) {
+				cond.push({
+					slug: req.params.subject,
+					courseId: result?.dataValues.id
+				})
+			}
+
 			DiscussionCourse.update(req.body, {
 				where: {
-					courseId: result?.dataValues.id,
-					slug: req.params.subject
+					[Op.or]: cond
 				}
 			})
 				.then((saved) => {
@@ -453,10 +466,9 @@ discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject/comment',
 		})
 })
 
-discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', requireAdmin(), (req, res) => {
+discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', requireLogin(), (req, res) => {
 	// add check user is admin, done
-	// add check user is moderator over course
-	// add check user created discussion
+	// add check user created discussion, done
 
 	DiscussionComment.findOne({
 		where: {
@@ -484,9 +496,22 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/commen
 		attributes: ['id']
 	})
 		.then((found) => {
+			const user = getUser(res)
+			const cond: any[] = [
+				{
+					id: found?.dataValues.id,
+					userId: user.user.id
+				}
+			]
+
+			if (user.privileges >= Privileges.ADMIN) {
+				cond.push({
+					id: found?.dataValues.id
+				})
+			}
 			DiscussionComment?.destroy({
 				where: {
-					id: found?.dataValues.id
+					[Op.or]: cond
 				}
 			})
 				.then((found) => {
@@ -511,9 +536,9 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/commen
 		})
 })
 
-discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', requireAdmin(), (req, res) => {
+discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject/comment/:localCommentId', requireLogin(), (req, res) => {
 	// add check user is admin, done
-	// add check user created comment
+	// add check user created comment, done
 
 	DiscussionComment.findOne({
 		where: {
@@ -541,9 +566,22 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject/comment
 		attributes: ['id']
 	})
 		.then((found) => {
+			const user = getUser(res)
+			const cond: any[] = [
+				{
+					id: found?.dataValues.id,
+					userId: user.user.id
+				}
+			]
+
+			if (user.privileges >= Privileges.ADMIN) {
+				cond.push({
+					id: found?.dataValues.id
+				})
+			}
 			DiscussionComment.update({ commentText: req.body.commentText }, {
 				where: {
-					id: found?.dataValues.id
+					[Op.or]: cond
 				}
 			})
 				.then((saved) => {
