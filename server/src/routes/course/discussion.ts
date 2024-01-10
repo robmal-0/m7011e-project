@@ -9,12 +9,49 @@ const discussionRouter = express.Router()
 // ------------------------------------------------------------
 // ----- university/course/discussion/ -----
 
+// get one discussion
 discussionRouter.get('/:uniSlug/course/:courseCode/discussion/:subject', (req, res) => {
 	DiscussionCourse.findOne({
 		attributes: ['subject', 'description'],
 		where: {
 			slug: req.params.subject
 		},
+		include: [{
+			model: Course,
+			attributes: ['code'],
+			where: {
+				code: req.params.courseCode
+			},
+			required: true,
+			include: [{
+				model: University,
+				where: {
+					slug: req.params.uniSlug
+				},
+				attributes: ['name', 'country', 'city']
+			}]
+		}]
+	})
+		.then((found) => {
+			if (found !== null) {
+				res.status(200)
+				res.send(found)
+			} else {
+				res.status(404)
+				res.send('Could not find discussion about course')
+			}
+		})
+		.catch((e) => {
+			console.error(e)
+			res.status(500)
+			res.send('Failed to get information about discussion')
+		})
+})
+
+// get all discussions
+discussionRouter.get('/:uniSlug/course/:courseCode/discussion/', (req, res) => {
+	DiscussionCourse.findAll({
+		attributes: ['subject', 'description', 'slug'],
 		include: [{
 			model: Course,
 			attributes: ['code'],
@@ -194,7 +231,7 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requi
 discussionRouter.post('/:uniSlug/course/:courseCode/discussion/:subject/comment', (req, res) => {
 	// check user is logged in
 
-	console.log('uniSlug:', req.params.uniSlug, 'code:', req.params.courseCode, 'subject:', req.params.subject)
+	// console.log('uniSlug:', req.params.uniSlug, 'code:', req.params.courseCode, 'subject:', req.params.subject)
 
 	const responseTo = req.body.responseTo !== undefined ? req.body.responseTo : null
 
@@ -245,7 +282,7 @@ discussionRouter.post('/:uniSlug/course/:courseCode/discussion/:subject/comment'
 								responseTo: result3?.dataValues.id
 							})
 								.then((created) => {
-									res.status(200)
+									res.status(201)
 									res.send('Comment has been created')
 								})
 								.catch((e) => {
