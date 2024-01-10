@@ -65,7 +65,7 @@ adminRouter.get('/admin/', requireAdmin(), (req, res) => {
 })
 
 adminRouter.post('/:username/admin/', requireAdmin(), (req, res) => {
-	// add check user is admin
+	// add check user is admin, done
 
 	User.findOne({
 		where: {

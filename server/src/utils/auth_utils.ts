@@ -1,6 +1,6 @@
 import { type RequestHandler } from 'express'
 import { setCookieHeader, verifyToken } from './token_verify'
-import { Privileges } from './get_user'
+import { Privileges, type UserResult } from './get_user'
 import { Moderator } from '../models'
 
 interface Options {
@@ -35,9 +35,11 @@ export function requireAdmin (options?: Options): RequestHandler {
 				}
 				if (options?.setToken === undefined || options.setToken) setCookieHeader(res, result)
 				res.setHeader('X-User-Data', JSON.stringify(result.user))
+				res.setHeader('X-User-Privilege', JSON.stringify(result.privileges))
 				next()
 			})
 			.catch(e => {
+				console.error(e)
 				res.status(403)
 				res.send('Access denied')
 			})
@@ -62,11 +64,19 @@ export function requireModerator (courseParam: string, options?: ModOptions): Re
 
 				if (options?.setToken === undefined || options.setToken) setCookieHeader(res, result)
 				res.setHeader('X-User-Data', JSON.stringify(result.user))
+				res.setHeader('X-User-Privilege', JSON.stringify(result.privileges))
 				next()
 			})
 			.catch(e => {
 				res.status(403)
 				res.send('Access denied')
 			})
+	}
+}
+
+export function getUser (res: any): UserResult {
+	return {
+		user: JSON.parse(res.getHeader('X-User-Data')),
+		privileges: Number(res.getHeader('X-User-Privilege'))
 	}
 }

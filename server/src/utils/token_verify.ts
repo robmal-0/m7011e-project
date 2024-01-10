@@ -16,6 +16,7 @@ export async function verifyToken (token: string): Promise<UserResult | undefine
 
 		return user
 	} catch (e) {
+		console.warn(e)
 		return undefined
 	}
 }

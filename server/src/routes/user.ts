@@ -1,10 +1,9 @@
 import express from 'express'
 import { User, type UserType } from '../models'
 import bcrypt from 'bcryptjs'
-import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import { setCookieHeader } from '../utils/token_verify'
-import { getUser } from '../utils/get_user'
+import { Privileges, type UserResult, getUser } from '../utils/get_user'
 import { requireAdmin, requireLogin } from '../utils/auth_utils'
 
 const userRouter = express.Router()
@@ -28,8 +27,11 @@ userRouter.post('/register', (req, res) => {
 				firstName: result.firstName,
 				lastName: result.lastName
 			}
-			const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, process.env.SECRET_KEY as string, { expiresIn: '2d' })
-			res.setHeader('Set-Cookie', cookie.serialize('auth_token', token))
+			const userRes: UserResult = {
+				user,
+				privileges: Privileges.USER
+			}
+			setCookieHeader(res, userRes)
 			res.setHeader('X-User-Data', JSON.stringify(user))
 			res.status(201)
 			res.send('Successfully registered user')
