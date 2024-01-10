@@ -49,6 +49,10 @@ userRouter.post('/login', (req, res) => {
 				res.send('Error: user not found')
 				return
 			}
+			if (result.bannedTill !== undefined && Number(result.bannedTill) > Number(new Date())) {
+				res.status(403)
+				res.send('User has been banned')
+			}
 			const verified: boolean = await bcrypt.compare(req.body.password, result.user.password)
 			if (verified) {
 				setCookieHeader(res, result)

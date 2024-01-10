@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { User, Admin, Moderator, type UserType } from '../models'
+import { User, Admin, Moderator, type UserType, BannedUser } from '../models'
 
 export enum Privileges {
 	USER = 0,
@@ -10,6 +10,7 @@ export enum Privileges {
 export interface UserResult {
 	user: UserType
 	privileges: Privileges
+	bannedTill?: Date
 }
 
 type Key = 'id' | 'username'
@@ -34,6 +35,9 @@ export const getUser = _.memoize(async (key: Key, value: any): Promise<UserResul
 	// TODO: Set privileges
 	let privileges = Privileges.USER
 
+	const bu = await BannedUser.findOne({ where: { userId: user.id } }) as any
+	const bannedTill = bu !== null ? new Date(bu.unbanDate) : undefined
+
 	let res = await Moderator.findOne({ where: { userId: user.id } })
 	if (res !== null) privileges = Privileges.MODERATOR
 	res = await Admin.findOne({ where: { userId: user.id } })
@@ -41,7 +45,8 @@ export const getUser = _.memoize(async (key: Key, value: any): Promise<UserResul
 
 	return {
 		user,
-		privileges
+		privileges,
+		bannedTill
 	}
 }, (key, value) => {
 	return [key, value]

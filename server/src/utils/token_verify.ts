@@ -11,7 +11,7 @@ export async function verifyToken (token: string): Promise<UserResult | undefine
 		const user = await getUser('id', claims.id)
 
 		return user
-	} catch {
+	} catch (e) {
 		return undefined
 	}
 }

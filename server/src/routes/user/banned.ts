@@ -71,6 +71,7 @@ banRouter.get('/banned/', requireAdmin(), (req, res) => {
 
 banRouter.post('/:username/banned/', requireAdmin(), (req, res) => {
 	// check that user is admin, done
+	console.log('IS ADMIN!')
 
 	User.findOne({
 		where: {
