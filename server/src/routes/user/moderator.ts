@@ -6,7 +6,7 @@ const modRouter = express.Router()
 
 modRouter.post('/moderator', requireAdmin(), (req, res) => {
 	// add check user is admin, done
-	// add check that user being promoted is not banned
+	// add check that user being promoted is not banned, done
 
 	User.findOne({
 		where: {

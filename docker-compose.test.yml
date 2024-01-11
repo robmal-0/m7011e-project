@@ -9,10 +9,15 @@ services:
       MYSQL_ROOT_PASSWORD: 'pwd123'
     volumes:
      - ./db_test:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 500ms
+      retries: 5
   pma_test:
     image: phpmyadmin
     depends_on:
-      - db_test
+      db_test:
+        condition: service_healthy
     environment:
       PMA_HOST: db_test
     ports:
@@ -22,7 +27,8 @@ services:
     volumes:
       - "./server:/app"
     depends_on:
-      - db_test
+      db_test:
+        condition: service_healthy
     working_dir: /app
     ports:
       - '3000:3000'

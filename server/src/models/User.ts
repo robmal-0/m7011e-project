@@ -10,12 +10,18 @@ const User = getServer().db.define('User', {
 	username: {
 		type: DataTypes.STRING,
 		unique: true,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			min: 5
+		}
 	},
 	email: {
 		type: DataTypes.STRING,
 		unique: true,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			isEmail: true
+		}
 	},
 	password: {
 		type: DataTypes.STRING,
@@ -23,15 +29,24 @@ const User = getServer().db.define('User', {
 	},
 	age: {
 		type: DataTypes.INTEGER,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			min: 15
+		}
 	},
 	firstName: {
 		type: DataTypes.STRING,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			min: 1
+		}
 	},
 	lastName: {
 		type: DataTypes.STRING,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			min: 1
+		}
 	}
 })
 

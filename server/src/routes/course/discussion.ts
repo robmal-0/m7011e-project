@@ -1,10 +1,10 @@
 import express from 'express'
 import slugify from 'slugify'
 import jwt from 'jsonwebtoken'
-import { getUser, requireLogin } from '../../utils/auth_utils'
+import { getUserInfo, isModerator, requireLogin } from '../../utils/auth_utils'
 import { University, User, DiscussionComment, DiscussionCourse, Course } from '../../models'
 import { Op } from 'sequelize'
-import { Privileges } from '../../utils/get_user'
+// import { Privileges } from '../../utils/get_user'
 
 const discussionRouter = express.Router()
 
@@ -187,8 +187,8 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requ
 		}],
 		attributes: ['id']
 	})
-		.then((result) => {
-			const user = getUser(res)
+		.then(async (result) => {
+			const user = getUserInfo(res)
 			const cond: any[] = [
 				{
 					slug: req.params.subject,
@@ -197,7 +197,7 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject', requ
 				}
 			]
 
-			if (user.privileges >= Privileges.ADMIN) {
+			if (await isModerator(user, result?.dataValues.id)) {
 				cond.push({
 					slug: req.params.subject,
 					courseId: result?.dataValues.id
@@ -247,8 +247,8 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requi
 		}],
 		attributes: ['id']
 	})
-		.then((result) => {
-			const user = getUser(res)
+		.then(async (result) => {
+			const user = getUserInfo(res)
 			const cond: any[] = [
 				{
 					slug: req.params.subject,
@@ -257,12 +257,12 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject', requi
 				}
 			]
 
-			if (user.privileges >= Privileges.ADMIN) {
-				cond.push({
-					slug: req.params.subject,
-					courseId: result?.dataValues.id
-				})
-			}
+			// if (await isModerator(user, result?.dataValues.id)) {
+			// 	cond.push({
+			// 		slug: req.params.subject,
+			// 		courseId: result?.dataValues.id
+			// 	})
+			// }
 
 			DiscussionCourse.update(req.body, {
 				where: {
@@ -491,12 +491,13 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/commen
 					},
 					attributes: ['name', 'country', 'city']
 				}]
-			}]
+			}],
+			attributes: ['courseId']
 		}],
 		attributes: ['id']
 	})
-		.then((found) => {
-			const user = getUser(res)
+		.then(async (found) => {
+			const user = getUserInfo(res)
 			const cond: any[] = [
 				{
 					id: found?.dataValues.id,
@@ -504,7 +505,7 @@ discussionRouter.delete('/:uniSlug/course/:courseCode/discussion/:subject/commen
 				}
 			]
 
-			if (user.privileges >= Privileges.ADMIN) {
+			if (await isModerator(user, found?.dataValues.DiscussionCourse.courseId)) {
 				cond.push({
 					id: found?.dataValues.id
 				})
@@ -566,7 +567,7 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject/comment
 		attributes: ['id']
 	})
 		.then((found) => {
-			const user = getUser(res)
+			const user = getUserInfo(res)
 			const cond: any[] = [
 				{
 					id: found?.dataValues.id,
@@ -574,11 +575,11 @@ discussionRouter.patch('/:uniSlug/course/:courseCode/discussion/:subject/comment
 				}
 			]
 
-			if (user.privileges >= Privileges.ADMIN) {
-				cond.push({
-					id: found?.dataValues.id
-				})
-			}
+			// if (user.privileges >= Privileges.ADMIN) {
+			// 	cond.push({
+			// 		id: found?.dataValues.id
+			// 	})
+			// }
 			DiscussionComment.update({ commentText: req.body.commentText }, {
 				where: {
 					[Op.or]: cond

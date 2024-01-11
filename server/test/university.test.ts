@@ -6,15 +6,14 @@ let port: number
 let adminAuth: string
 
 async function createUser (info: any): Promise<Response> {
-	const res = await fetch('http://localhost:3000/user/register', {
+	// @ts-expect-error
+	return await fetch('http://localhost:3000/user/register', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(info)
 	})
-
-	return res
 }
 
 beforeAll(async () => {
@@ -25,7 +24,7 @@ beforeAll(async () => {
 			port = server.port
 			console.log(`Test server running at port ${port}`)
 			server.db.authenticate().then(async () => {
-				await resetDatabase(server.db)
+				// await resetDatabase(server.db)
 				server.server.use('/user', (await import('../src/routes/user')).default)
 				server.server.use('/user', (await import('../src/routes/user/admin')).default)
 				server.server.use('/university', (await import('../src/routes/university')).default)
@@ -39,6 +38,7 @@ beforeAll(async () => {
 				console.error(e)
 				const msg = 'Failed to connect to database'
 				console.log(msg)
+				process.exit(69)
 				reject(msg)
 			})
 		})

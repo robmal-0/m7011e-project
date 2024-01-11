@@ -74,7 +74,15 @@ export function requireModerator (courseParam: string, options?: ModOptions): Re
 	}
 }
 
-export function getUser (res: any): UserResult {
+export async function isModerator (user: UserResult, courseId: number): Promise<boolean> {
+	if (user.privileges < Privileges.MODERATOR) return false
+	if (user.privileges >= Privileges.ADMIN) return true
+
+	const mod = await Moderator.findOne({ where: { userId: user.user.id, courseId } })
+	return mod !== null
+}
+
+export function getUserInfo (res: any): UserResult {
 	return {
 		user: JSON.parse(res.getHeader('X-User-Data')),
 		privileges: Number(res.getHeader('X-User-Privilege'))

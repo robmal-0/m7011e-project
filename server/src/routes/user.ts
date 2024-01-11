@@ -4,14 +4,17 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { setCookieHeader } from '../utils/token_verify'
 import { Privileges, type UserResult, getUser } from '../utils/get_user'
-import { requireAdmin, requireLogin } from '../utils/auth_utils'
+import { getUserInfo, requireAdmin, requireLogin } from '../utils/auth_utils'
+import { Op } from 'sequelize'
 
 const userRouter = express.Router()
 
 userRouter.post('/register', (req, res) => {
+	const password = req.body.password !== undefined && req.body.password.length > 5 ? bcrypt.hashSync(req.body.password, 10) : undefined
+
 	User?.create({
 		username: req.body.username,
-		password: bcrypt.hashSync(req.body.password, 10),
+		password,
 		email: req.body.email,
 		age: req.body.age,
 		firstName: req.body.firstName,
@@ -136,9 +139,25 @@ userRouter.get('/', (req, res) => {
 		})
 })
 
-userRouter.patch('/:username', requireAdmin(), (req, res) => {
+userRouter.patch('/:username', requireLogin(), (req, res) => {
 	// add check if user is admin, done
 	// add check if user is user
+
+	const user = getUserInfo(res)
+
+	const cond: Array<Partial<UserType>> = [
+		{
+			username: req.params.username,
+			id: user.user.id
+		}
+	]
+
+	// console.log(user.privileges)
+	if (user.privileges >= Privileges.ADMIN) {
+		cond.push({
+			username: req.params.username
+		})
+	}
 
 	const hashPass = req.body.password !== undefined
 		? bcrypt.hashSync(req.body.password, 10)
@@ -153,11 +172,11 @@ userRouter.patch('/:username', requireAdmin(), (req, res) => {
 		lastName: req.body.lastName
 	}, {
 		where: {
-			username: req.params.username
+			[Op.or]: cond
 		}
 	})
 		.then((saved) => {
-			console.log(saved[0])
+			// console.log(saved[0])
 			if (saved[0] !== 0) {
 				res.status(200)
 				res.send('User information has been updated')

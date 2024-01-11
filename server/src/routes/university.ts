@@ -39,7 +39,8 @@ universityRouter.get('/', (req, res) => {
 		attributes: [
 			'name',
 			'country',
-			'city'
+			'city',
+			'slug'
 		]
 	}
 
